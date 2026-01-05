@@ -4,7 +4,14 @@
   become: true
   gather_facts: true
   vars:
-    azure_connection_string: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1"
+    azurite_account: "devstoreaccount1"
+    # Well-known Azurite development key
+    azurite_key: "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw=="
+    azure_connection_string: >-
+      DefaultEndpointsProtocol=http;AccountName={{ azurite_account }};AccountKey={{ azurite_key }};
+      BlobEndpoint=http://azurite:10000/{{ azurite_account }};
+      QueueEndpoint=http://azurite:10001/{{ azurite_account }};
+      TableEndpoint=http://azurite:10002/{{ azurite_account }}
   environment:
     AZURE_STORAGE_CONNECTION_STRING: "{{ azure_connection_string }}"
 
