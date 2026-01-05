@@ -1,17 +1,79 @@
 # Ansible Molecule Testing Framework
 
-A comprehensive Ansible testing infrastructure with multi-environment support, cloud provider simulation, and both Linux and Windows container testing.
+A production-grade Ansible testing infrastructure featuring 30 roles with comprehensive Molecule tests, 15 environment configurations, cloud provider emulation, and multi-platform support including Linux and Windows.
+
+[![CI](https://github.com/ayointegral/ansible-molecule-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/ayointegral/ansible-molecule-framework/actions/workflows/ci.yml)
+
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Project Structure](#project-structure)
+- [Environments](#environments)
+- [Roles](#roles)
+- [Cloud Simulation](#cloud-simulation)
+- [Testing](#testing)
+- [CI/CD Integration](#cicd-integration)
+- [Windows Testing](#windows-testing)
+- [Configuration Reference](#configuration-reference)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+
+---
 
 ## Overview
 
-This project provides a production-grade Ansible testing framework featuring:
+This framework provides a complete infrastructure-as-code testing solution using Ansible and Molecule. It demonstrates best practices for:
 
-- **15 Environment Compartments**: 7 Live, 7 Test, plus shared configuration
-- **26 Ansible Roles**: Covering infrastructure, web, databases, monitoring, security, and cloud simulations
-- **Molecule Testing**: Full test coverage with Docker and Podman support
-- **Windows Support**: Windows Server Core container testing (requires Windows host)
-- **CI/CD Simulation**: Local pipeline simulator for comprehensive testing
-- **Cloud Simulations**: AWS, Azure, and GCP service simulation for testing
+- **Role Development**: Modular, reusable Ansible roles with proper structure
+- **Testing**: Comprehensive testing with Molecule across multiple platforms
+- **Environment Management**: Separate configurations for dev, staging, production, and more
+- **Cloud Simulation**: Free cloud emulators (LocalStack, Azurite, etc.) for realistic testing
+- **CI/CD Integration**: GitHub Actions workflows with full test coverage
+- **Multi-Platform Support**: Linux (Ubuntu, Debian, Rocky Linux) and Windows Server
+
+### Key Metrics
+
+| Metric | Count |
+|--------|-------|
+| Ansible Roles | 30 |
+| Environments | 15 (7 live + 7 test + 1 shared) |
+| Test Platforms | 4 (Ubuntu, Debian, Rocky, Windows) |
+| Cloud Emulators | 6 (LocalStack, MinIO, Azurite, fake-gcs, Vault, Consul) |
+
+---
+
+## Features
+
+### Role Categories
+
+| Category | Roles | Description |
+|----------|-------|-------------|
+| **common** | base, packages, users | Base system configuration |
+| **containers** | docker, podman | Container runtime installation |
+| **databases** | postgresql, mysql, redis | Database servers |
+| **monitoring** | prometheus, grafana, alertmanager, node_exporter | Observability stack |
+| **security** | firewall, hardening, certificates, selinux | Security configuration |
+| **storage** | disk_management, lvm, nfs | Storage management |
+| **web** | nginx, haproxy | Web servers and load balancers |
+| **cloud/aws** | localstack, s3, ec2_simulation | AWS service simulation |
+| **cloud/azure** | storage_account, keyvault | Azure service simulation |
+| **cloud/gcp** | gcs, pubsub | GCP service simulation |
+| **cloud** | vault, consul | HashiCorp tools |
+| **windows** | iis, windows_features, windows_firewall | Windows Server roles |
+
+### Testing Features
+
+- **Multi-Platform Testing**: Test roles across Ubuntu, Debian, Rocky Linux, and Windows
+- **Cloud Emulation**: Test cloud integrations without cloud costs using sidecar containers
+- **Idempotence Verification**: Ensure roles can run multiple times without changes
+- **Parallel Execution**: Run up to 8 tests concurrently in CI
+- **Multiple Drivers**: Docker (primary), Podman, and Delegated
+
+---
 
 ## Quick Start
 
@@ -19,265 +81,475 @@ This project provides a production-grade Ansible testing framework featuring:
 
 - Python 3.9+
 - Docker or Podman
-- Ansible 2.12+
+- Ansible 2.15+
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd ansible-molecule
+git clone https://github.com/ayointegral/ansible-molecule-framework.git
+cd ansible-molecule-framework
 
 # Create virtual environment
-python3 -m venv venv
+python -m venv venv
 source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
 
 # Install Ansible collections
-ansible-galaxy install -r requirements.yml
+ansible-galaxy collection install -r requirements.yml
 ```
 
-### Running Tests
+### Run Your First Test
 
 ```bash
-# Run molecule test for a specific role
-make molecule ROLE=common/base
+# Test the base role
+cd roles/common/base
+molecule test
 
-# Run all molecule tests
+# Or use Make
+make molecule ROLE=common/base
+```
+
+### Run All Tests
+
+```bash
+# Using Make
 make molecule-all
 
-# Run with Podman instead of Docker
-make molecule ROLE=common/base DRIVER=podman
-
-# Run lint checks
-make lint
-
-# Run full CI pipeline
-make pipeline
+# Using CI Simulator
+python ci/simulator.py --stage molecule
 ```
+
+---
 
 ## Project Structure
 
 ```
 ansible-molecule/
-├── inventories/          # Environment inventories (15 total)
-│   ├── live/             # Production environments (7)
-│   ├── test/             # Test environments (7)
-│   └── shared/           # Shared configuration
-├── roles/                # Ansible roles (20+)
-│   ├── common/           # Base system roles
-│   ├── web/              # Web server roles
-│   ├── containers/       # Container platform roles
-│   ├── security/         # Security roles
-│   ├── storage/          # Storage roles
-│   ├── cloud/            # Cloud simulation roles
-│   ├── databases/        # Database roles
-│   ├── monitoring/       # Monitoring roles
-│   └── windows/          # Windows-specific roles
-├── molecule/             # Global molecule scenarios
-├── playbooks/            # Ansible playbooks
-├── ci/                   # CI/CD pipeline simulator
-├── tests/                # Unit and integration tests
-├── docs/                 # Documentation
-└── scripts/              # Utility scripts
+├── ansible.cfg                 # Ansible configuration
+├── requirements.txt            # Python dependencies
+├── requirements.yml            # Ansible collections
+├── Makefile                    # Automation commands
+├── .yamllint.yml               # YAML linting rules
+│
+├── .github/workflows/          # GitHub Actions CI
+│   ├── ci.yml                  # Main CI workflow
+│   ├── _lint.yml               # Lint workflow
+│   └── _molecule-test.yml      # Molecule test workflow
+│
+├── inventories/                # Environment configurations (15)
+│   ├── live/                   # Production environments (7)
+│   ├── test/                   # Test environments (7)
+│   └── shared/                 # Shared configuration
+│
+├── roles/                      # Ansible roles (30)
+│   ├── common/                 # base, packages, users
+│   ├── containers/             # docker, podman
+│   ├── databases/              # postgresql, mysql, redis
+│   ├── monitoring/             # prometheus, grafana, alertmanager, node_exporter
+│   ├── security/               # firewall, hardening, certificates, selinux
+│   ├── storage/                # disk_management, lvm, nfs
+│   ├── web/                    # nginx, haproxy
+│   ├── cloud/                  # AWS, Azure, GCP, Vault, Consul
+│   └── windows/                # iis, windows_features, windows_firewall
+│
+├── ci/                         # CI/CD tools
+│   └── simulator.py            # Pipeline orchestrator
+│
+├── docs/                       # Documentation
+│   ├── cloud-simulation.md     # Cloud emulator guide
+│   ├── windows-testing.md      # Windows testing guide
+│   └── ...
+│
+└── scripts/                    # Helper scripts
 ```
 
-## Environment Matrix
+---
+
+## Environments
 
 ### Live Environments (7)
 
-| Environment | Purpose |
-|-------------|---------|
-| live-platform-core | Core infrastructure (DNS, DHCP) |
-| live-platform-network | Network services (VPN, Load Balancers) |
-| live-platform-security | Security services (Firewall, WAF) |
-| live-platform-storage | Storage services (NFS, S3-compat) |
-| live-apps-web | Web tier applications |
-| live-apps-api | API/Backend services |
-| live-apps-data | Data tier (databases, caches) |
+| Environment | Purpose | Inventory Path |
+|-------------|---------|----------------|
+| live-platform-core | Core infrastructure (DNS, DHCP) | `inventories/live/live-platform-core/` |
+| live-platform-network | Network services (VPN, Load Balancers) | `inventories/live/live-platform-network/` |
+| live-platform-security | Security services (Firewall, WAF) | `inventories/live/live-platform-security/` |
+| live-platform-storage | Storage services (NFS, S3-compat) | `inventories/live/live-platform-storage/` |
+| live-apps-web | Web tier applications | `inventories/live/live-apps-web/` |
+| live-apps-api | API/Backend services | `inventories/live/live-apps-api/` |
+| live-apps-data | Data tier (databases, caches) | `inventories/live/live-apps-data/` |
 
 ### Test Environments (7)
 
-Mirrors the live environment structure for testing.
+Mirror environments for testing playbooks before applying to live systems.
 
-## Available Roles
+### Shared Configuration
 
-### Core Infrastructure
-| Role | Description | Status |
-|------|-------------|--------|
-| common/base | Base system configuration | ✅ Tested |
-| common/packages | Package management | ✅ Tested |
-| common/users | User and group management | ✅ Tested |
-| security/firewall | Firewall (ufw/firewalld/iptables) | ✅ Tested |
+Common variables shared across all environments in `inventories/shared/`.
 
-### Web & Containers
-| Role | Description | Status |
-|------|-------------|--------|
-| web/nginx | Nginx web server with SSL | ✅ Tested |
-| web/haproxy | HAProxy load balancer | ✅ Tested |
-| containers/docker | Docker installation | ✅ Tested |
-| containers/podman | Podman installation | ✅ Tested |
+---
 
-### Storage
-| Role | Description | Status |
-|------|-------------|--------|
-| storage/disk_management | Disk/VHD simulation | ✅ Tested |
-| storage/lvm | LVM management | ✅ Tested |
-| storage/nfs | NFS server/client | ✅ Tested |
+## Roles
 
-### Databases
-| Role | Description | Status |
-|------|-------------|--------|
-| databases/postgresql | PostgreSQL server | ✅ Tested |
-| databases/mysql | MySQL/MariaDB server | ✅ Tested |
-| databases/redis | Redis cache | ✅ Tested |
+### Complete Role Inventory
 
-### Cloud Simulations
-| Role | Description | Status |
-|------|-------------|--------|
-| cloud/aws/s3 | S3 simulation (MinIO) | ✅ Tested |
-| cloud/aws/ec2_simulation | EC2 metadata simulation | ✅ Tested |
-| cloud/azure/storage_account | Azure Blob simulation (Azurite) | ✅ Tested |
-| cloud/azure/keyvault | Key Vault simulation | ✅ Tested |
-| cloud/gcp/gcs | GCS simulation | ✅ Tested |
+| Category | Role | Description | Platform | CI Status |
+|----------|------|-------------|----------|-----------|
+| common | base | System baseline configuration | Linux | Tested |
+| common | packages | Package management | Linux | Tested |
+| common | users | User and group management | Linux | Tested |
+| containers | docker | Docker CE installation | Linux | Tested |
+| containers | podman | Podman installation | Linux | Tested |
+| databases | postgresql | PostgreSQL server | Linux | Tested |
+| databases | mysql | MySQL/MariaDB server | Linux | Tested |
+| databases | redis | Redis cache server | Linux | Tested |
+| monitoring | prometheus | Prometheus metrics server | Linux | Tested |
+| monitoring | grafana | Grafana visualization | Linux | Tested |
+| monitoring | alertmanager | Prometheus Alertmanager | Linux | Tested |
+| monitoring | node_exporter | Prometheus Node Exporter | Linux | Tested |
+| security | firewall | UFW/firewalld/iptables | Linux | Tested |
+| security | hardening | OS hardening | Linux | Tested |
+| security | certificates | TLS certificate management | Linux | Tested |
+| security | selinux | SELinux configuration | Linux | Tested |
+| storage | disk_management | Disk partitioning | Linux | Tested |
+| storage | lvm | LVM volume management | Linux | Tested |
+| storage | nfs | NFS server and client | Linux | Tested |
+| web | nginx | Nginx web server | Linux | Tested |
+| web | haproxy | HAProxy load balancer | Linux | Tested |
+| cloud/aws | localstack | LocalStack AWS emulator | Linux | Tested |
+| cloud/aws | s3 | S3-compatible storage (MinIO) | Linux | Tested |
+| cloud/aws | ec2_simulation | EC2 metadata simulation | Linux | Tested |
+| cloud/azure | storage_account | Azure Blob simulation (Azurite) | Linux | Tested |
+| cloud/azure | keyvault | Azure Key Vault simulation | Linux | Tested |
+| cloud/gcp | gcs | GCS simulation (fake-gcs-server) | Linux | Tested |
+| cloud/gcp | pubsub | Pub/Sub emulator | Linux | Tested |
+| cloud | vault | HashiCorp Vault | Linux | Tested |
+| cloud | consul | HashiCorp Consul | Linux | Tested |
+| windows | iis | IIS Web Server | Windows | Manual |
+| windows | windows_features | Windows Features | Windows | Manual |
+| windows | windows_firewall | Windows Firewall | Windows | Manual |
 
-### Monitoring
-| Role | Description | Status |
-|------|-------------|--------|
-| monitoring/prometheus | Prometheus server | ✅ Tested |
-| monitoring/grafana | Grafana dashboards | ✅ Tested |
-| monitoring/alertmanager | Prometheus Alertmanager | ✅ Tested |
-| monitoring/node_exporter | Prometheus Node Exporter | ✅ Tested |
+---
 
-### Windows (Requires Windows Host)
-| Role | Description | Status |
-|------|-------------|--------|
-| windows/iis | IIS web server | ⚠️ Windows Only |
-| windows/windows_firewall | Windows Firewall | ⚠️ Windows Only |
-| windows/windows_features | Windows Features | ⚠️ Windows Only |
+## Cloud Simulation
 
-## Molecule Testing
+Test cloud integrations without incurring cloud costs using free emulators as sidecar containers.
+
+### Available Emulators
+
+| Cloud | Emulator | Services | License |
+|-------|----------|----------|---------|
+| **AWS** | LocalStack | S3, SQS, SNS, DynamoDB, Lambda, IAM, CloudWatch | Free tier |
+| **AWS** | MinIO | S3-compatible storage | Apache 2.0 |
+| **Azure** | Azurite | Blob, Queue, Table storage | MIT (Microsoft) |
+| **GCP** | fake-gcs-server | Cloud Storage | MIT |
+| **GCP** | Pub/Sub Emulator | Pub/Sub messaging | Free |
+| **Secrets** | HashiCorp Vault | KV secrets, policies | MPL 2.0 |
+| **Discovery** | HashiCorp Consul | Service registry, KV store | MPL 2.0 |
+
+### How It Works
+
+Cloud roles use Docker sidecar containers to provide emulated cloud services:
+
+```yaml
+# molecule.yml example with LocalStack sidecar
+platforms:
+  - name: test-instance
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    networks:
+      - name: localstack-network
+
+  - name: localstack
+    image: localstack/localstack:latest
+    pre_build_image: true
+    env:
+      SERVICES: "s3,sqs,sns,dynamodb"
+    networks:
+      - name: localstack-network
+```
+
+### Running Cloud Tests
+
+```bash
+# Test AWS LocalStack integration
+cd roles/cloud/aws/localstack && molecule test
+
+# Test Azure Azurite integration
+cd roles/cloud/azure/storage_account && molecule test
+
+# Test HashiCorp Vault
+cd roles/cloud/vault && molecule test
+```
+
+See [docs/cloud-simulation.md](docs/cloud-simulation.md) for detailed documentation.
+
+---
+
+## Testing
+
+### Molecule Overview
+
+Each role includes Molecule tests with:
+
+- **molecule.yml**: Test configuration
+- **converge.yml**: Playbook to apply the role
+- **verify.yml**: Playbook to verify expected state
+
+### Test Sequence
+
+1. **dependency**: Install role dependencies
+2. **cleanup**: Clean up previous test artifacts
+3. **destroy**: Destroy any existing test instances
+4. **syntax**: Check playbook syntax
+5. **create**: Create test instances
+6. **prepare**: Prepare instances (install prerequisites)
+7. **converge**: Apply the role
+8. **idempotence**: Run converge again, verify no changes
+9. **verify**: Run verification playbook
+10. **cleanup**: Clean up test artifacts
+11. **destroy**: Destroy test instances
 
 ### Running Tests
 
-Each role has its own molecule tests in `roles/<category>/<role>/molecule/default/`.
-
 ```bash
-# Test a specific role
+# Full test cycle
 cd roles/common/base
 molecule test
 
-# Test with specific scenario
-molecule test -s podman
+# Individual stages
+molecule create      # Create test instances
+molecule converge    # Apply the role
+molecule verify      # Run verification
+molecule destroy     # Cleanup
 
-# Run only converge (apply the role)
-molecule converge
-
-# Run only verify (run assertions)
-molecule verify
-
-# Debug - leave containers running
+# Debug mode - keep containers running
 molecule test --destroy=never
+molecule login -h instance-ubuntu
+
+# Test specific scenario
+molecule test -s podman
 ```
 
-### Supported Platforms
-
-- Ubuntu 22.04 (geerlingguy/docker-ubuntu2204-ansible)
-- Debian 12 (geerlingguy/docker-debian12-ansible)
-- Rocky Linux 9 (geerlingguy/docker-rockylinux9-ansible)
-- Windows Server 2022 (requires Windows host)
-
-## CI/CD Pipeline Simulator
-
-The local pipeline simulator runs all tests in sequence:
-
-```bash
-# Run full pipeline
-python ci/simulator.py --stage all
-
-# Run specific stage
-python ci/simulator.py --stage lint
-python ci/simulator.py --stage molecule --role common/base
-
-# Generate reports
-python ci/simulator.py --stage all --report html
-
-# List all testable roles
-python ci/simulator.py --list-roles
-
-# Dry run
-python ci/simulator.py --stage all --dry-run
-```
-
-### Pipeline Stages
-
-1. **Lint**: ansible-lint, yamllint
-2. **Syntax**: ansible-playbook --syntax-check
-3. **Unit**: pytest unit tests
-4. **Molecule**: Role-level molecule tests
-
-## Makefile Commands
+### Makefile Commands
 
 ```bash
 make help           # Show all commands
 make lint           # Run linting
 make syntax         # Syntax check
-make molecule ROLE=<role>  # Test specific role
+make molecule ROLE=common/base  # Test specific role
 make molecule-all   # Test all roles
 make pipeline       # Run full pipeline
 make clean          # Cleanup test artifacts
-make reports        # Generate test reports
 ```
 
-## Configuration
+### CI Simulator
 
-### ansible.cfg
+```bash
+# List all roles with Molecule tests
+python ci/simulator.py --list-roles
 
-The main Ansible configuration with optimized settings for testing.
+# Run all stages
+python ci/simulator.py --stage all
 
-### requirements.yml
+# Run specific stage
+python ci/simulator.py --stage lint
+python ci/simulator.py --stage molecule
 
-Ansible Galaxy collection requirements:
-- community.general
-- community.docker
-- community.mysql
-- community.postgresql
-- ansible.windows (for Windows roles)
-- community.windows (for Windows roles)
+# Test specific role
+python ci/simulator.py --stage molecule --role common/base
 
-### requirements.txt
+# Generate reports
+python ci/simulator.py --stage all --report html
+```
 
-Python dependencies for running tests.
+---
+
+## CI/CD Integration
+
+### GitHub Actions Pipeline
+
+The CI pipeline runs on every push and PR:
+
+| Job | Description | Roles Tested |
+|-----|-------------|--------------|
+| **Discover** | Find all roles with molecule tests | - |
+| **Lint** | YAML and Ansible linting | - |
+| **Syntax** | Playbook syntax validation | - |
+| **Molecule Quick** | Standard role tests | 21 roles |
+| **Molecule Cloud** | Cloud roles with emulators | 9 roles |
+| **Summary** | Aggregate results | - |
+
+### Test Matrix
+
+**Standard Roles (21):**
+- common/base, common/packages, common/users
+- containers/docker, containers/podman
+- databases/mysql, databases/postgresql, databases/redis
+- monitoring/alertmanager, monitoring/grafana, monitoring/node_exporter, monitoring/prometheus
+- security/certificates, security/firewall, security/hardening, security/selinux
+- storage/disk_management, storage/lvm, storage/nfs
+- web/haproxy, web/nginx
+
+**Cloud Roles (9):**
+- cloud/aws/localstack, cloud/aws/s3, cloud/aws/ec2_simulation
+- cloud/azure/storage_account, cloud/azure/keyvault
+- cloud/gcp/gcs, cloud/gcp/pubsub
+- cloud/vault, cloud/consul
+
+**Excluded (require Windows host):**
+- windows/iis, windows/windows_features, windows/windows_firewall
+
+---
 
 ## Windows Testing
 
-Windows roles require special configuration:
+Windows roles require a Windows host with WinRM enabled.
 
-1. Windows containers only run on Windows hosts
-2. For Linux/macOS, use delegated driver with Windows VMs
-3. Configure WinRM on target Windows systems
+### Setup
+
+```powershell
+# Run as Administrator on Windows host
+Enable-PSRemoting -Force
+winrm quickconfig -q
+winrm set winrm/config/service '@{AllowUnencrypted="true"}'
+winrm set winrm/config/service/auth '@{Basic="true"}'
+```
+
+### Running Tests
 
 ```bash
-# Set environment variables for Windows testing
-export WINDOWS_HOST=your-windows-vm-ip
+# Set connection details
+export WINDOWS_HOST=192.168.1.100
 export WINDOWS_USER=Administrator
-export WINDOWS_PASSWORD=your-password
+export WINDOWS_PASSWORD=YourPassword
 
-# Run Windows role test
+# Run tests
 cd roles/windows/iis
-molecule test
+molecule test -s delegated
 ```
+
+See [docs/windows-testing.md](docs/windows-testing.md) for detailed documentation.
+
+---
+
+## Configuration Reference
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `ansible.cfg` | Ansible configuration |
+| `requirements.txt` | Python dependencies |
+| `requirements.yml` | Ansible collections |
+| `.yamllint.yml` | YAML linting rules |
+| `Makefile` | Automation commands |
+
+### Required Molecule Settings
+
+All molecule.yml files must include:
+
+```yaml
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ALLOW_BROKEN_CONDITIONALS: "true"
+```
+
+All converge.yml files must use the full path:
+
+```yaml
+roles:
+  - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"
+```
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+#### Ansible 2.19+ String Conditional Errors
+
+```
+Conditional result was derived from value of type 'str'
+```
+
+**Fix**: Add `ANSIBLE_ALLOW_BROKEN_CONDITIONALS: "true"` to molecule.yml provisioner env.
+
+#### Role Not Found
+
+```
+the role 'rolename' was not found
+```
+
+**Fix**: Use full `MOLECULE_PROJECT_DIRECTORY` path in converge.yml, not `| basename`.
+
+#### Galaxy Role Name Validation
+
+```
+Computed fully qualified role name does not follow galaxy requirements
+```
+
+**Fix**: Ensure `role_name` and `namespace` are inside `galaxy_info` block in meta/main.yml.
+
+#### Docker Container Cleanup
+
+```bash
+# Remove all Molecule containers
+docker ps -a | grep molecule | awk '{print $1}' | xargs docker rm -f
+
+# Or use Make
+make clean
+```
+
+### Debug Mode
+
+```bash
+# Verbose Molecule output
+molecule --debug test
+
+# Keep containers for debugging
+molecule test --destroy=never
+molecule login -h instance-ubuntu
+
+# Ansible verbose output
+molecule converge -- -vvv
+```
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make changes with molecule tests
+4. Run `make lint` and `make molecule ROLE=<your-role>`
+5. Update documentation
+6. Submit pull request
+
+### Adding a New Role
+
+```bash
+# Create role structure
+mkdir -p roles/category/new_role/{defaults,handlers,meta,tasks,templates,vars,molecule/default}
+
+# Create required files
+touch roles/category/new_role/{defaults,handlers,meta,tasks}/main.yml
+touch roles/category/new_role/molecule/default/{molecule,converge,verify}.yml
+```
+
+---
 
 ## Documentation
 
+- [Cloud Simulation Guide](docs/cloud-simulation.md)
+- [Windows Testing Guide](docs/windows-testing.md)
 - [Setup Guide](docs/setup.md)
 - [Usage Guide](docs/usage.md)
-- [Role Documentation](docs/roles.md)
-- [Environment Guide](docs/environments.md)
 - [Troubleshooting](docs/troubleshooting.md)
-- [Architecture](ARCHITECTURE.md)
 
 ## Error Tracking
 
@@ -287,18 +559,16 @@ All errors and resolutions are documented in [ERRORS.md](ERRORS.md).
 
 Development progress is tracked in [PROGRESS.md](PROGRESS.md).
 
-## Research Notes
-
-Technical research and decisions are documented in [RESEARCH.md](RESEARCH.md).
-
-## Contributing
-
-1. Create a feature branch
-2. Implement changes with molecule tests
-3. Run `make lint` and `make molecule ROLE=<your-role>`
-4. Update documentation
-5. Submit pull request
+---
 
 ## License
 
 MIT License
+
+## Acknowledgments
+
+- [Jeff Geerling](https://github.com/geerlingguy) for excellent Docker images
+- [Ansible](https://www.ansible.com/) for the automation platform
+- [Molecule](https://molecule.readthedocs.io/) for the testing framework
+- [LocalStack](https://localstack.cloud/) for AWS emulation
+- [Azurite](https://github.com/Azure/Azurite) for Azure emulation

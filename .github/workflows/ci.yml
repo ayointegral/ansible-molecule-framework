@@ -108,21 +108,44 @@ jobs:
 
           exit $FAILED
 
-  # Run molecule tests on a subset of roles (quick check)
+  # Run molecule tests on standard roles (no sidecars needed)
   molecule-quick:
     name: Molecule Quick
     runs-on: ubuntu-latest
     needs: [discover, syntax]
     strategy:
       fail-fast: false
-      max-parallel: 6
+      max-parallel: 8
       matrix:
         role:
+          # Common roles
           - common/base
+          - common/packages
           - common/users
+          # Container roles
+          - containers/docker
+          - containers/podman
+          # Database roles
+          - databases/mysql
+          - databases/postgresql
+          - databases/redis
+          # Monitoring roles
+          - monitoring/alertmanager
+          - monitoring/grafana
+          - monitoring/node_exporter
+          - monitoring/prometheus
+          # Security roles
+          - security/certificates
+          - security/firewall
           - security/hardening
-          - services/docker
-          - services/nginx
+          - security/selinux
+          # Storage roles
+          - storage/disk_management
+          - storage/lvm
+          - storage/nfs
+          # Web roles
+          - web/haproxy
+          - web/nginx
         platform: [ubuntu]
 
     steps:
@@ -221,11 +244,93 @@ jobs:
         if: steps.molecule.outputs.result == 'failed'
         run: exit 1
 
+  # Run molecule tests on cloud roles (require sidecar emulators)
+  molecule-cloud:
+    name: Molecule Cloud
+    runs-on: ubuntu-latest
+    needs: [discover, syntax]
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          # AWS with LocalStack
+          - role: cloud/aws/localstack
+            scenario: default
+          - role: cloud/aws/s3
+            scenario: default
+          - role: cloud/aws/ec2_simulation
+            scenario: default
+          # Azure with Azurite
+          - role: cloud/azure/storage_account
+            scenario: default
+          - role: cloud/azure/keyvault
+            scenario: default
+          # GCP with emulators
+          - role: cloud/gcp/gcs
+            scenario: default
+          - role: cloud/gcp/pubsub
+            scenario: default
+          # HashiCorp tools
+          - role: cloud/vault
+            scenario: default
+          - role: cloud/consul
+            scenario: default
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          ansible-galaxy collection install -r requirements.yml
+
+      - name: Configure instance name
+        id: config
+        run: |
+          INSTANCE=$(echo "${{ matrix.role }}" | tr '/' '-')
+          echo "instance=${INSTANCE}" >> $GITHUB_OUTPUT
+
+      - name: Run Molecule test
+        id: molecule
+        working-directory: roles/${{ matrix.role }}
+        run: |
+          START=$(date +%s)
+
+          if molecule test -s ${{ matrix.scenario }} 2>&1 | tee molecule.log; then
+            echo "result=passed" >> $GITHUB_OUTPUT
+          else
+            echo "result=failed" >> $GITHUB_OUTPUT
+          fi
+
+          END=$(date +%s)
+          echo "duration=$((END - START))s" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: molecule-log-cloud-${{ steps.config.outputs.instance }}
+          path: roles/${{ matrix.role }}/molecule.log
+          retention-days: 5
+
+      - name: Set job result
+        if: steps.molecule.outputs.result == 'failed'
+        run: exit 1
+
   # Summary job
   summary:
     name: CI Summary
     runs-on: ubuntu-latest
-    needs: [discover, lint, syntax, molecule-quick]
+    needs: [discover, lint, syntax, molecule-quick, molecule-cloud]
     if: always()
     steps:
       - name: Generate Summary
@@ -256,15 +361,24 @@ jobs:
             echo "| 🔧 Syntax | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
           fi
 
-          # Molecule
+          # Molecule Quick
           if [ "${{ needs.molecule-quick.result }}" == "success" ]; then
-            echo "| 🧪 Molecule Quick | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🧪 Molecule Quick | ✅ Passed (21 roles) |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| 🧪 Molecule Quick | ❌ Some tests failed |" >> $GITHUB_STEP_SUMMARY
           fi
 
+          # Molecule Cloud
+          if [ "${{ needs.molecule-cloud.result }}" == "success" ]; then
+            echo "| ☁️ Molecule Cloud | ✅ Passed (9 roles) |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| ☁️ Molecule Cloud | ❌ Some tests failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total: 30 roles tested** (excludes 3 Windows roles requiring Windows host)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "*For full matrix testing across all platforms, run the 'Molecule Full Matrix' workflow manually.*" >> $GITHUB_STEP_SUMMARY
 
@@ -276,6 +390,10 @@ jobs:
           fi
           if [ "${{ needs.molecule-quick.result }}" != "success" ]; then
             echo "Molecule quick tests failed"
+            exit 1
+          fi
+          if [ "${{ needs.molecule-cloud.result }}" != "success" ]; then
+            echo "Molecule cloud tests failed"
             exit 1
           fi
           echo "All critical checks passed!"
