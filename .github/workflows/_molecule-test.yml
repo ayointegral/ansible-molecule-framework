@@ -1,0 +1,130 @@
+---
+# Reusable workflow for running Molecule tests on a single role
+name: Molecule Test (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      role:
+        description: 'Role path relative to roles/ (e.g., common/base)'
+        required: true
+        type: string
+      platform:
+        description: 'Platform to test on (ubuntu, debian, rocky)'
+        required: true
+        type: string
+    outputs:
+      result:
+        description: 'Test result (passed/failed)'
+        value: ${{ jobs.test.outputs.result }}
+      duration:
+        description: 'Test duration'
+        value: ${{ jobs.test.outputs.duration }}
+
+env:
+  PY_COLORS: '1'
+  ANSIBLE_FORCE_COLOR: '1'
+
+jobs:
+  test:
+    name: Molecule
+    runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.molecule.outputs.result }}
+      duration: ${{ steps.molecule.outputs.duration }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          ansible-galaxy collection install -r requirements.yml
+
+      - name: Configure test platform
+        id: config
+        run: |
+          case "${{ inputs.platform }}" in
+            ubuntu)
+              echo "image=geerlingguy/docker-ubuntu2204-ansible:latest" >> $GITHUB_OUTPUT
+              ;;
+            debian)
+              echo "image=geerlingguy/docker-debian12-ansible:latest" >> $GITHUB_OUTPUT
+              ;;
+            rocky)
+              echo "image=geerlingguy/docker-rockylinux9-ansible:latest" >> $GITHUB_OUTPUT
+              ;;
+          esac
+          
+          INSTANCE=$(echo "${{ inputs.role }}-${{ inputs.platform }}" | tr '/' '-')
+          echo "instance=${INSTANCE}" >> $GITHUB_OUTPUT
+
+      - name: Create CI molecule scenario
+        run: |
+          ROLE_DIR="roles/${{ inputs.role }}"
+          INSTANCE="${{ steps.config.outputs.instance }}"
+          IMAGE="${{ steps.config.outputs.image }}"
+          
+          mkdir -p "$ROLE_DIR/molecule/ci"
+          
+          cat > "$ROLE_DIR/molecule/ci/molecule.yml" << EOF
+          ---
+          driver:
+            name: docker
+          platforms:
+            - name: ${INSTANCE}
+              image: ${IMAGE}
+              pre_build_image: true
+              privileged: true
+              cgroupns_mode: host
+              volumes:
+                - /sys/fs/cgroup:/sys/fs/cgroup:rw
+              tmpfs:
+                - /run
+                - /tmp
+              command: ""
+          provisioner:
+            name: ansible
+            env:
+              ANSIBLE_ALLOW_BROKEN_CONDITIONALS: "true"
+            playbooks:
+              converge: ../default/converge.yml
+              verify: ../default/verify.yml
+          verifier:
+            name: ansible
+          EOF
+
+      - name: Run Molecule test
+        id: molecule
+        working-directory: roles/${{ inputs.role }}
+        run: |
+          START=$(date +%s)
+          
+          if molecule test -s ci 2>&1 | tee molecule.log; then
+            echo "result=passed" >> $GITHUB_OUTPUT
+          else
+            echo "result=failed" >> $GITHUB_OUTPUT
+          fi
+          
+          END=$(date +%s)
+          echo "duration=$((END - START))s" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: molecule-log-${{ inputs.role }}-${{ inputs.platform }}
+          path: roles/${{ inputs.role }}/molecule.log
+          retention-days: 5
+
+      - name: Fail if test failed
+        if: steps.molecule.outputs.result == 'failed'
+        run: exit 1
