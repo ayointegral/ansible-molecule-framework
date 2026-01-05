@@ -1,0 +1,41 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Check sensitive file permissions
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: file_stats
+      loop:
+        - /etc/passwd
+        - /etc/shadow
+        - /etc/group
+      failed_when: false
+
+    - name: Verify /etc/passwd permissions
+      ansible.builtin.assert:
+        that:
+          - file_stats.results[0].stat.mode == '0644'
+        fail_msg: "/etc/passwd has incorrect permissions"
+        success_msg: "/etc/passwd permissions are correct"
+      when: file_stats.results[0].stat.exists
+
+    - name: Verify /etc/shadow permissions
+      ansible.builtin.assert:
+        that:
+          - file_stats.results[1].stat.mode in ['0640', '0600', '0000']
+        fail_msg: "/etc/shadow has incorrect permissions"
+        success_msg: "/etc/shadow permissions are correct"
+      when: file_stats.results[1].stat.exists
+
+    - name: Check kernel parameters (if available)
+      ansible.builtin.command: sysctl net.ipv4.conf.all.accept_redirects
+      register: sysctl_result
+      changed_when: false
+      failed_when: false
+
+    - name: Display hardening verification complete
+      ansible.builtin.debug:
+        msg: "Security hardening verification complete"

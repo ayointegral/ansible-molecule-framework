@@ -1,0 +1,120 @@
+---
+# Security Hardening Role - CIS Benchmark Compliant
+# Uses devsec.hardening collection for industry-standard hardening
+
+- name: Display hardening configuration
+  ansible.builtin.debug:
+    msg: "Applying security hardening (CIS Level: {{ hardening_cis_level }})"
+
+- name: Include OS-specific variables
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_os_family | lower }}.yml"
+    - "default.yml"
+  ignore_errors: true
+
+# OS Hardening from devsec.hardening collection
+- name: Apply OS hardening
+  when: hardening_os_enabled | bool
+  ansible.builtin.include_role:
+    name: devsec.hardening.os_hardening
+  vars:
+    os_auth_pw_max_age: "{{ hardening_password_max_age }}"
+    os_auth_pw_min_age: "{{ hardening_password_min_age }}"
+    os_auth_retries: "{{ hardening_auth_retries }}"
+    os_auth_lockout_time: "{{ hardening_auth_lockout_time }}"
+    os_auth_timeout: "{{ hardening_auth_timeout }}"
+    os_desktop_enable: "{{ hardening_desktop_enabled }}"
+    os_env_extra_user_paths: "{{ hardening_extra_user_paths }}"
+    os_security_users_allow: "{{ hardening_allowed_users }}"
+    os_security_kernel_enable_module_loading: "{{ hardening_kernel_module_loading }}"
+    os_security_kernel_enable_core_dump: "{{ hardening_core_dump_enabled }}"
+    os_security_suid_sgid_enforce: "{{ hardening_suid_sgid_enforce }}"
+    sysctl_overwrite:
+      net.ipv4.ip_forward: "{{ '1' if hardening_ip_forwarding else '0' }}"
+      net.ipv4.conf.all.accept_source_route: 0
+      net.ipv4.conf.default.accept_source_route: 0
+      net.ipv4.conf.all.accept_redirects: 0
+      net.ipv4.conf.default.accept_redirects: 0
+      net.ipv4.conf.all.secure_redirects: 0
+      net.ipv4.conf.default.secure_redirects: 0
+      net.ipv4.conf.all.log_martians: 1
+      net.ipv4.conf.default.log_martians: 1
+      net.ipv4.icmp_echo_ignore_broadcasts: 1
+      net.ipv4.icmp_ignore_bogus_error_responses: 1
+      net.ipv4.conf.all.rp_filter: 1
+      net.ipv4.conf.default.rp_filter: 1
+      net.ipv4.tcp_syncookies: 1
+      kernel.randomize_va_space: 2
+
+# SSH Hardening from devsec.hardening collection
+- name: Apply SSH hardening
+  when: hardening_ssh_enabled | bool
+  ansible.builtin.include_role:
+    name: devsec.hardening.ssh_hardening
+  vars:
+    ssh_permit_root_login: "{{ hardening_ssh_permit_root_login }}"
+    ssh_allow_tcp_forwarding: "{{ hardening_ssh_tcp_forwarding }}"
+    ssh_allow_agent_forwarding: "{{ hardening_ssh_agent_forwarding }}"
+    ssh_max_auth_retries: "{{ hardening_ssh_max_auth_retries }}"
+    ssh_client_alive_interval: "{{ hardening_ssh_client_alive_interval }}"
+    ssh_client_alive_count: "{{ hardening_ssh_client_alive_count }}"
+    ssh_permit_tunnel: "{{ hardening_ssh_permit_tunnel }}"
+    ssh_print_last_log: "{{ hardening_ssh_print_last_log }}"
+    ssh_banner: "{{ hardening_ssh_banner }}"
+    ssh_deny_users: "{{ hardening_ssh_deny_users }}"
+    ssh_allow_users: "{{ hardening_ssh_allow_users }}"
+    ssh_allow_groups: "{{ hardening_ssh_allow_groups }}"
+    ssh_deny_groups: "{{ hardening_ssh_deny_groups }}"
+    ssh_authorized_keys_file: "{{ hardening_ssh_authorized_keys_file }}"
+    ssh_max_startups: "{{ hardening_ssh_max_startups }}"
+    ssh_use_pam: "{{ hardening_ssh_use_pam }}"
+    ssh_use_dns: "{{ hardening_ssh_use_dns }}"
+    ssh_ciphers: "{{ hardening_ssh_ciphers }}"
+    ssh_macs: "{{ hardening_ssh_macs }}"
+    ssh_kex: "{{ hardening_ssh_kex }}"
+
+# Additional custom hardening tasks
+- name: Configure audit logging
+  when:
+    - hardening_audit_enabled | bool
+    - ansible_os_family == 'Debian' or ansible_os_family == 'RedHat'
+  block:
+    - name: Install auditd
+      ansible.builtin.package:
+        name: "{{ hardening_audit_package }}"
+        state: present
+
+    - name: Enable auditd service
+      ansible.builtin.service:
+        name: auditd
+        enabled: true
+        state: started
+
+- name: Remove unnecessary packages
+  when: hardening_remove_packages | length > 0
+  ansible.builtin.package:
+    name: "{{ hardening_remove_packages }}"
+    state: absent
+
+- name: Disable unnecessary services
+  when: hardening_disable_services | length > 0
+  ansible.builtin.service:
+    name: "{{ item }}"
+    enabled: false
+    state: stopped
+  loop: "{{ hardening_disable_services }}"
+  ignore_errors: true
+
+- name: Set file permissions on sensitive files
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    mode: "{{ item.mode }}"
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+  loop: "{{ hardening_file_permissions }}"
+  when: hardening_file_permissions | length > 0
+
+- name: Display hardening complete message
+  ansible.builtin.debug:
+    msg: "Security hardening complete. CIS Level {{ hardening_cis_level }} applied."

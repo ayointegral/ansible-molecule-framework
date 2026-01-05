@@ -1,0 +1,108 @@
+---
+# Security Hardening Role - Default Variables
+# CIS Benchmark compliant configuration
+
+# General Settings
+hardening_cis_level: 1  # 1 or 2 (Level 2 is more restrictive)
+hardening_os_enabled: true
+hardening_ssh_enabled: true
+hardening_audit_enabled: true
+
+# Password Policy (CIS 5.4.1)
+hardening_password_max_age: 365
+hardening_password_min_age: 1
+hardening_password_min_length: 14
+hardening_password_remember: 5
+
+# Authentication Settings (CIS 5.4.2)
+hardening_auth_retries: 5
+hardening_auth_lockout_time: 900
+hardening_auth_timeout: 60
+
+# User/Group Settings
+hardening_allowed_users: []
+hardening_desktop_enabled: false
+hardening_extra_user_paths: []
+
+# Kernel Settings (CIS 3.1, 3.2, 3.3)
+hardening_kernel_module_loading: true
+hardening_core_dump_enabled: false
+hardening_suid_sgid_enforce: true
+hardening_ip_forwarding: false
+
+# SSH Hardening Settings (CIS 5.2)
+hardening_ssh_permit_root_login: "no"
+hardening_ssh_tcp_forwarding: "no"
+hardening_ssh_agent_forwarding: "no"
+hardening_ssh_max_auth_retries: 4
+hardening_ssh_client_alive_interval: 300
+hardening_ssh_client_alive_count: 3
+hardening_ssh_permit_tunnel: "no"
+hardening_ssh_print_last_log: true
+hardening_ssh_banner: true
+hardening_ssh_deny_users: []
+hardening_ssh_allow_users: []
+hardening_ssh_allow_groups: []
+hardening_ssh_deny_groups: []
+hardening_ssh_authorized_keys_file: ".ssh/authorized_keys"
+hardening_ssh_max_startups: "10:30:60"
+hardening_ssh_use_pam: true
+hardening_ssh_use_dns: false
+
+# SSH Crypto Settings (CIS 5.2.13-15)
+hardening_ssh_ciphers:
+  - chacha20-poly1305@openssh.com
+  - aes256-gcm@openssh.com
+  - aes128-gcm@openssh.com
+  - aes256-ctr
+  - aes192-ctr
+  - aes128-ctr
+
+hardening_ssh_macs:
+  - hmac-sha2-512-etm@openssh.com
+  - hmac-sha2-256-etm@openssh.com
+  - hmac-sha2-512
+  - hmac-sha2-256
+
+hardening_ssh_kex:
+  - curve25519-sha256
+  - curve25519-sha256@libssh.org
+  - diffie-hellman-group16-sha512
+  - diffie-hellman-group18-sha512
+  - diffie-hellman-group-exchange-sha256
+
+# Audit Settings (CIS 4.1)
+hardening_audit_package: auditd
+
+# Packages to Remove (CIS 2.2)
+hardening_remove_packages: []
+# Example:
+#   - telnet
+#   - rsh-client
+#   - rsh-redone-client
+
+# Services to Disable (CIS 2.2)
+hardening_disable_services: []
+# Example:
+#   - cups
+#   - avahi-daemon
+#   - rpcbind
+
+# File Permissions (CIS 6.1)
+hardening_file_permissions:
+  - path: /etc/passwd
+    mode: "0644"
+  - path: /etc/shadow
+    mode: "0640"
+  - path: /etc/group
+    mode: "0644"
+  - path: /etc/gshadow
+    mode: "0640"
+  - path: /etc/passwd-
+    mode: "0644"
+  - path: /etc/shadow-
+    mode: "0640"
+  - path: /etc/group-
+    mode: "0644"
+  - path: /etc/gshadow-
+    mode: "0640"

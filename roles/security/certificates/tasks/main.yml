@@ -1,0 +1,91 @@
+---
+# SSL/TLS Certificates Management Role
+
+- name: Display certificate configuration
+  ansible.builtin.debug:
+    msg: "Managing certificates for {{ certificates_domains | default(['localhost']) | join(', ') }}"
+
+- name: Ensure certificate directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  loop:
+    - "{{ certificates_dir }}"
+    - "{{ certificates_private_dir }}"
+
+- name: Set private key directory permissions
+  ansible.builtin.file:
+    path: "{{ certificates_private_dir }}"
+    mode: "0700"
+
+- name: Generate self-signed certificates
+  when: certificates_self_signed | bool
+  block:
+    - name: Generate private key
+      community.crypto.openssl_privatekey:
+        path: "{{ certificates_private_dir }}/{{ certificates_key_name }}"
+        size: "{{ certificates_key_size }}"
+        type: RSA
+        mode: "0600"
+
+    - name: Generate CSR
+      community.crypto.openssl_csr:
+        path: "{{ certificates_dir }}/{{ certificates_csr_name }}"
+        privatekey_path: "{{ certificates_private_dir }}/{{ certificates_key_name }}"
+        common_name: "{{ certificates_common_name }}"
+        organization_name: "{{ certificates_organization }}"
+        country_name: "{{ certificates_country }}"
+        state_or_province_name: "{{ certificates_state }}"
+        locality_name: "{{ certificates_locality }}"
+        subject_alt_name: "{{ certificates_san | default(omit) }}"
+
+    - name: Generate self-signed certificate
+      community.crypto.x509_certificate:
+        path: "{{ certificates_dir }}/{{ certificates_cert_name }}"
+        privatekey_path: "{{ certificates_private_dir }}/{{ certificates_key_name }}"
+        csr_path: "{{ certificates_dir }}/{{ certificates_csr_name }}"
+        provider: selfsigned
+        selfsigned_not_after: "+{{ certificates_validity_days }}d"
+
+- name: Copy provided certificates
+  when: not certificates_self_signed | bool
+  block:
+    - name: Copy certificate file
+      ansible.builtin.copy:
+        src: "{{ certificates_src_cert }}"
+        dest: "{{ certificates_dir }}/{{ certificates_cert_name }}"
+        mode: "0644"
+      when: certificates_src_cert is defined
+
+    - name: Copy private key file
+      ansible.builtin.copy:
+        src: "{{ certificates_src_key }}"
+        dest: "{{ certificates_private_dir }}/{{ certificates_key_name }}"
+        mode: "0600"
+      when: certificates_src_key is defined
+
+    - name: Copy CA bundle
+      ansible.builtin.copy:
+        src: "{{ certificates_src_ca }}"
+        dest: "{{ certificates_dir }}/{{ certificates_ca_name }}"
+        mode: "0644"
+      when: certificates_src_ca is defined
+
+- name: Create combined certificate (fullchain)
+  when:
+    - certificates_create_fullchain | bool
+    - certificates_src_ca is defined or certificates_self_signed | bool
+  ansible.builtin.shell: |
+    cat {{ certificates_dir }}/{{ certificates_cert_name }} \
+        {{ certificates_dir }}/{{ certificates_ca_name | default('') }} \
+        > {{ certificates_dir }}/{{ certificates_fullchain_name }}
+  args:
+    creates: "{{ certificates_dir }}/{{ certificates_fullchain_name }}"
+  changed_when: true
+
+- name: Display certificate management complete
+  ansible.builtin.debug:
+    msg: "Certificate management complete"

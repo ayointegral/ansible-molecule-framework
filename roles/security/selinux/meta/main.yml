@@ -1,0 +1,27 @@
+---
+galaxy_info:
+  author: Ansible Molecule Testing Framework
+  role_name: selinux
+  namespace: security
+  description: SELinux configuration and management
+  license: MIT
+  min_ansible_version: "2.15"
+
+  platforms:
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+    - name: Fedora
+      versions:
+        - all
+
+  galaxy_tags:
+    - security
+    - selinux
+    - hardening
+    - compliance
+
+dependencies:
+  - ansible.posix
+  - community.general

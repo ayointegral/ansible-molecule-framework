@@ -1,0 +1,17 @@
+---
+# Handlers for SELinux role
+
+- name: Reboot if required
+  ansible.builtin.reboot:
+    reboot_timeout: 300
+  when:
+    - selinux_state_result.reboot_required | default(false)
+    - selinux_reboot_if_required | bool
+  listen: "Reboot if required"
+
+- name: Restore SELinux contexts
+  ansible.builtin.command: restorecon -Rv {{ item.target }}
+  loop: "{{ selinux_fcontexts }}"
+  when: selinux_fcontexts | length > 0
+  changed_when: true
+  listen: "Restore SELinux contexts"

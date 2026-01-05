@@ -1,0 +1,19 @@
+---
+# Handlers for security hardening role
+
+- name: Restart sshd
+  ansible.builtin.service:
+    name: sshd
+    state: restarted
+  listen: "restart sshd"
+
+- name: Restart auditd
+  ansible.builtin.service:
+    name: auditd
+    state: restarted
+  listen: "restart auditd"
+
+- name: Reload sysctl
+  ansible.builtin.command: sysctl -p
+  listen: "reload sysctl"
+  changed_when: true

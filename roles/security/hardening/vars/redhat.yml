@@ -1,0 +1,14 @@
+---
+# RedHat/Rocky/CentOS specific variables
+
+hardening_audit_package: audit
+
+hardening_common_packages_to_remove:
+  - telnet
+  - rsh
+  - talk
+  - openldap-clients
+
+hardening_common_services_to_disable:
+  - avahi-daemon
+  - cups

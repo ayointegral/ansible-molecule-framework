@@ -1,0 +1,57 @@
+---
+# SELinux Role - Default Variables
+
+# SELinux state: enforcing, permissive, disabled
+selinux_state: enforcing
+
+# SELinux policy: targeted, mls, minimum
+selinux_policy: targeted
+
+# Packages for RedHat family
+selinux_packages:
+  - policycoreutils
+  - policycoreutils-python-utils
+  - selinux-policy
+  - selinux-policy-targeted
+  - libselinux-utils
+  - setools-console
+
+# Packages for Debian family
+selinux_packages_debian:
+  - selinux-basics
+  - selinux-policy-default
+  - policycoreutils
+  - python3-selinux
+
+# SELinux booleans to configure
+# Example:
+# selinux_booleans:
+#   - name: httpd_can_network_connect
+#     state: true
+#     persistent: true
+#   - name: httpd_use_nfs
+#     state: false
+selinux_booleans: []
+
+# SELinux file contexts to set
+# Example:
+# selinux_fcontexts:
+#   - target: '/srv/www(/.*)?'
+#     setype: httpd_sys_content_t
+#   - target: '/custom/log(/.*)?'
+#     setype: var_log_t
+selinux_fcontexts: []
+
+# SELinux port contexts to set
+# Example:
+# selinux_ports:
+#   - port: 8080
+#     proto: tcp
+#     setype: http_port_t
+#   - port: 8443
+#     proto: tcp
+#     setype: http_port_t
+selinux_ports: []
+
+# Reboot if SELinux state change requires it
+selinux_reboot_if_required: false

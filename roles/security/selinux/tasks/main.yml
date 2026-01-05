@@ -1,0 +1,74 @@
+---
+# SELinux Management Role
+
+- name: Display SELinux configuration
+  ansible.builtin.debug:
+    msg: "Configuring SELinux mode: {{ selinux_state }}"
+
+- name: Check if SELinux is available
+  ansible.builtin.stat:
+    path: /etc/selinux/config
+  register: selinux_config_file
+
+- name: SELinux configuration block
+  when: selinux_config_file.stat.exists
+  block:
+    - name: Install SELinux management packages (RedHat)
+      ansible.builtin.package:
+        name: "{{ selinux_packages }}"
+        state: present
+      when: ansible_os_family == 'RedHat'
+
+    - name: Install SELinux management packages (Debian)
+      ansible.builtin.package:
+        name: "{{ selinux_packages_debian }}"
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: Get current SELinux status
+      ansible.builtin.command: getenforce
+      register: selinux_current_status
+      changed_when: false
+      failed_when: false
+
+    - name: Display current SELinux status
+      ansible.builtin.debug:
+        msg: "Current SELinux status: {{ selinux_current_status.stdout | default('Unknown') }}"
+
+    - name: Set SELinux state
+      ansible.posix.selinux:
+        policy: "{{ selinux_policy }}"
+        state: "{{ selinux_state }}"
+      register: selinux_state_result
+      notify: Reboot if required
+
+    - name: Set SELinux booleans
+      ansible.posix.seboolean:
+        name: "{{ item.name }}"
+        state: "{{ item.state | default(true) }}"
+        persistent: "{{ item.persistent | default(true) }}"
+      loop: "{{ selinux_booleans }}"
+      when: selinux_booleans | length > 0
+
+    - name: Set SELinux file contexts
+      community.general.sefcontext:
+        target: "{{ item.target }}"
+        setype: "{{ item.setype }}"
+        state: "{{ item.state | default('present') }}"
+      loop: "{{ selinux_fcontexts }}"
+      when: selinux_fcontexts | length > 0
+      notify: Restore SELinux contexts
+
+    - name: Set SELinux port contexts
+      community.general.seport:
+        ports: "{{ item.port }}"
+        proto: "{{ item.proto | default('tcp') }}"
+        setype: "{{ item.setype }}"
+        state: "{{ item.state | default('present') }}"
+      loop: "{{ selinux_ports }}"
+      when: selinux_ports | length > 0
+
+- name: SELinux not available
+  when: not selinux_config_file.stat.exists
+  ansible.builtin.debug:
+    msg: "SELinux is not available on this system (config file not found)"

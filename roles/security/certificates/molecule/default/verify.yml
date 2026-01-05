@@ -1,0 +1,40 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Check certificate file exists
+      ansible.builtin.stat:
+        path: /etc/ssl/certs/server.crt
+      register: cert_file
+
+    - name: Check private key file exists
+      ansible.builtin.stat:
+        path: /etc/ssl/private/server.key
+      register: key_file
+
+    - name: Verify certificate file exists
+      ansible.builtin.assert:
+        that:
+          - cert_file.stat.exists
+        fail_msg: "Certificate file not found"
+        success_msg: "Certificate file exists"
+
+    - name: Verify private key file exists
+      ansible.builtin.assert:
+        that:
+          - key_file.stat.exists
+        fail_msg: "Private key file not found"
+        success_msg: "Private key file exists"
+
+    - name: Verify private key permissions
+      ansible.builtin.assert:
+        that:
+          - key_file.stat.mode == '0600'
+        fail_msg: "Private key has incorrect permissions"
+        success_msg: "Private key permissions are correct"
+
+    - name: Display verification complete
+      ansible.builtin.debug:
+        msg: "Certificate verification complete"

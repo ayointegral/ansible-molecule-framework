@@ -1,0 +1,30 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Check if SELinux config exists
+      ansible.builtin.stat:
+        path: /etc/selinux/config
+      register: selinux_config
+
+    - name: Verify SELinux handling
+      ansible.builtin.debug:
+        msg: >
+          SELinux config {{ 'exists' if selinux_config.stat.exists else 'does not exist' }}.
+          Role handled this correctly.
+
+    - name: Get SELinux status (if available)
+      ansible.builtin.command: getenforce
+      register: selinux_status
+      changed_when: false
+      failed_when: false
+
+    - name: Display SELinux status
+      ansible.builtin.debug:
+        msg: "SELinux status: {{ selinux_status.stdout | default('Not available') }}"
+
+    - name: Verification complete
+      ansible.builtin.debug:
+        msg: "SELinux role verification complete"

@@ -1,0 +1,13 @@
+---
+# Debian/Ubuntu specific variables
+
+hardening_audit_package: auditd
+
+hardening_common_packages_to_remove:
+  - telnet
+  - rsh-client
+  - talk
+  - ldap-utils
+
+hardening_common_services_to_disable:
+  - avahi-daemon

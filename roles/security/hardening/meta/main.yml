@@ -1,0 +1,36 @@
+---
+galaxy_info:
+  author: Ansible Molecule Testing Framework
+  role_name: hardening
+  namespace: security
+  description: CIS Benchmark compliant security hardening using devsec.hardening
+  license: MIT
+  min_ansible_version: "2.15"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+
+  galaxy_tags:
+    - security
+    - hardening
+    - cis
+    - compliance
+    - devsec
+
+dependencies:
+  - role: devsec.hardening.os_hardening
+    when: hardening_os_enabled | default(true) | bool
+  - role: devsec.hardening.ssh_hardening
+    when: hardening_ssh_enabled | default(true) | bool

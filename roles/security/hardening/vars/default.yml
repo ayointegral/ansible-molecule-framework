@@ -1,0 +1,8 @@
+---
+# Default variables (fallback)
+
+hardening_audit_package: auditd
+
+hardening_common_packages_to_remove: []
+
+hardening_common_services_to_disable: []

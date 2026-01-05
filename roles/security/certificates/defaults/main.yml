@@ -1,0 +1,47 @@
+---
+# SSL/TLS Certificates Role - Default Variables
+
+# Certificate type
+certificates_self_signed: true
+
+# Certificate paths
+certificates_dir: /etc/ssl/certs
+certificates_private_dir: /etc/ssl/private
+
+# Certificate file names
+certificates_cert_name: server.crt
+certificates_key_name: server.key
+certificates_csr_name: server.csr
+certificates_ca_name: ca.crt
+certificates_fullchain_name: fullchain.crt
+
+# Private key settings
+certificates_key_size: 4096
+
+# Certificate validity
+certificates_validity_days: 365
+
+# Certificate subject
+certificates_common_name: "{{ ansible_fqdn | default('localhost') }}"
+certificates_organization: "Organization"
+certificates_country: "US"
+certificates_state: "State"
+certificates_locality: "City"
+
+# Subject Alternative Names (optional)
+# certificates_san:
+#   - "DNS:example.com"
+#   - "DNS:www.example.com"
+#   - "IP:192.168.1.1"
+
+# Domains for certificate
+certificates_domains:
+  - "{{ ansible_fqdn | default('localhost') }}"
+
+# Create fullchain certificate
+certificates_create_fullchain: false
+
+# Source files for non-self-signed certificates
+# certificates_src_cert: files/server.crt
+# certificates_src_key: files/server.key
+# certificates_src_ca: files/ca.crt

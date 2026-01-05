@@ -1,0 +1,10 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  vars:
+    # SELinux is typically disabled in containers
+    # This tests that the role handles missing SELinux gracefully
+    selinux_state: permissive
+  roles:
+    - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"

@@ -1,0 +1,12 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  vars:
+    # Minimal hardening for container testing
+    hardening_os_enabled: false  # Skip os_hardening in containers (requires reboot)
+    hardening_ssh_enabled: false  # Skip ssh_hardening in containers (no sshd)
+    hardening_audit_enabled: false  # Skip auditd in containers
+    hardening_cis_level: 1
+  roles:
+    - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"
