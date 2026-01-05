@@ -43,7 +43,7 @@ jobs:
         id: validate
         run: |
           ROLE_PATH="roles/${{ inputs.role }}"
-          
+
           if [ ! -d "$ROLE_PATH" ]; then
             echo "❌ Role not found: ${{ inputs.role }}" >> $GITHUB_STEP_SUMMARY
             echo "Available roles:" >> $GITHUB_STEP_SUMMARY
@@ -53,19 +53,19 @@ jobs:
               | while read role; do echo "- \`$role\`" >> $GITHUB_STEP_SUMMARY; done
             exit 1
           fi
-          
+
           if [ ! -d "$ROLE_PATH/molecule/default" ]; then
             echo "❌ No molecule scenario found in ${{ inputs.role }}" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
-          
+
           # Determine platforms
           if [ "${{ inputs.platform }}" == "all" ]; then
             echo 'platforms=["ubuntu", "debian", "rocky"]' >> $GITHUB_OUTPUT
           else
             echo 'platforms=["${{ inputs.platform }}"]' >> $GITHUB_OUTPUT
           fi
-          
+
           echo "✅ Validated: Testing \`${{ inputs.role }}\` on ${{ inputs.platform }}" >> $GITHUB_STEP_SUMMARY
 
   test:
@@ -106,7 +106,7 @@ jobs:
               echo "image=geerlingguy/docker-rockylinux9-ansible:latest" >> $GITHUB_OUTPUT
               ;;
           esac
-          
+
           INSTANCE=$(echo "${{ inputs.role }}-${{ matrix.platform }}" | tr '/' '-')
           echo "instance=${INSTANCE}" >> $GITHUB_OUTPUT
 
@@ -115,9 +115,9 @@ jobs:
           ROLE_DIR="roles/${{ inputs.role }}"
           INSTANCE="${{ steps.config.outputs.instance }}"
           IMAGE="${{ steps.config.outputs.image }}"
-          
+
           mkdir -p "$ROLE_DIR/molecule/ci"
-          
+
           cat > "$ROLE_DIR/molecule/ci/molecule.yml" << EOF
           ---
           driver:
@@ -150,18 +150,18 @@ jobs:
         working-directory: roles/${{ inputs.role }}
         run: |
           START=$(date +%s)
-          
+
           DEBUG_FLAG=""
           if [ "${{ inputs.debug }}" == "true" ]; then
             DEBUG_FLAG="--debug"
           fi
-          
+
           if molecule $DEBUG_FLAG test -s ci 2>&1 | tee molecule.log; then
             echo "result=passed" >> $GITHUB_OUTPUT
           else
             echo "result=failed" >> $GITHUB_OUTPUT
           fi
-          
+
           END=$(date +%s)
           echo "duration=$((END - START))s" >> $GITHUB_OUTPUT
         continue-on-error: true
@@ -170,7 +170,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: molecule-log-${{ inputs.role }}-${{ matrix.platform }}
+          name: molecule-log-${{ steps.config.outputs.instance }}
           path: roles/${{ inputs.role }}/molecule.log
           retention-days: 7
 
@@ -179,7 +179,7 @@ jobs:
         run: |
           echo "## Test Result: ${{ inputs.role }} on ${{ matrix.platform }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ "${{ steps.molecule.outputs.result }}" == "passed" ]; then
             echo "✅ **PASSED** in ${{ steps.molecule.outputs.duration }}" >> $GITHUB_STEP_SUMMARY
           else

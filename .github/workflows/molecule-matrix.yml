@@ -43,7 +43,7 @@ jobs:
             | sed 's|roles/||; s|/molecule/default||' \
             | grep -v "^windows/" \
             | sort)
-          
+
           # Determine platforms based on input
           PLATFORM_INPUT="${{ inputs.platform }}"
           if [ -z "$PLATFORM_INPUT" ] || [ "$PLATFORM_INPUT" == "all" ]; then
@@ -51,18 +51,18 @@ jobs:
           else
             PLATFORMS="$PLATFORM_INPUT"
           fi
-          
+
           # Build matrix JSON
           MATRIX='{"include":['
           FIRST=true
-          
+
           for role in $ROLES; do
             for platform in $PLATFORMS; do
               # Skip known incompatible combinations
               if [[ "$role" == "cloud/azure/"* ]] && [ "$platform" == "rocky" ]; then
                 continue
               fi
-              
+
               if [ "$FIRST" = true ]; then
                 FIRST=false
               else
@@ -71,12 +71,12 @@ jobs:
               MATRIX="$MATRIX{\"role\":\"$role\",\"platform\":\"$platform\"}"
             done
           done
-          
+
           MATRIX="$MATRIX]}"
-          
+
           echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
           echo "role_count=$(echo $ROLES | wc -w | tr -d ' ')" >> $GITHUB_OUTPUT
-          
+
           echo "## Test Matrix" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Testing ${{ inputs.platform || 'all' }} platform(s) across $(echo $ROLES | wc -w | tr -d ' ') roles" >> $GITHUB_STEP_SUMMARY
@@ -120,7 +120,7 @@ jobs:
               echo "image=geerlingguy/docker-rockylinux9-ansible:latest" >> $GITHUB_OUTPUT
               ;;
           esac
-          
+
           INSTANCE=$(echo "${{ matrix.role }}-${{ matrix.platform }}" | tr '/' '-')
           echo "instance=${INSTANCE}" >> $GITHUB_OUTPUT
 
@@ -129,9 +129,9 @@ jobs:
           ROLE_DIR="roles/${{ matrix.role }}"
           INSTANCE="${{ steps.config.outputs.instance }}"
           IMAGE="${{ steps.config.outputs.image }}"
-          
+
           mkdir -p "$ROLE_DIR/molecule/ci"
-          
+
           cat > "$ROLE_DIR/molecule/ci/molecule.yml" << EOF
           ---
           driver:
@@ -164,13 +164,13 @@ jobs:
         working-directory: roles/${{ matrix.role }}
         run: |
           START=$(date +%s)
-          
+
           if molecule test -s ci 2>&1 | tee molecule.log; then
             echo "result=passed" >> $GITHUB_OUTPUT
           else
             echo "result=failed" >> $GITHUB_OUTPUT
           fi
-          
+
           END=$(date +%s)
           echo "duration=$((END - START))s" >> $GITHUB_OUTPUT
         continue-on-error: true
@@ -179,7 +179,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: molecule-log-${{ matrix.role }}-${{ matrix.platform }}
+          name: molecule-log-${{ steps.config.outputs.instance }}
           path: roles/${{ matrix.role }}/molecule.log
           retention-days: 5
 
@@ -190,7 +190,7 @@ jobs:
           PLATFORM="${{ matrix.platform }}"
           RESULT="${{ steps.molecule.outputs.result }}"
           DURATION="${{ steps.molecule.outputs.duration }}"
-          
+
           if [ "$RESULT" == "passed" ]; then
             echo "✅ **${ROLE}** on ${PLATFORM} - ${DURATION}" >> $GITHUB_STEP_SUMMARY
           else
@@ -224,7 +224,7 @@ jobs:
           echo "- **Platform(s):** ${{ inputs.platform || 'all' }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Overall result:** ${{ needs.molecule.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ "${{ needs.molecule.result }}" == "success" ]; then
             echo "🎉 **All molecule tests passed!**" >> $GITHUB_STEP_SUMMARY
           else

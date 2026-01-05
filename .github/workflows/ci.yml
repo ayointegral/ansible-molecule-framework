@@ -48,10 +48,10 @@ jobs:
             | grep -v "^windows/" \
             | sort \
             | jq -R -s -c 'split("\n") | map(select(length > 0))')
-          
+
           echo "roles=${ROLES}" >> $GITHUB_OUTPUT
           echo "role_count=$(echo $ROLES | jq '. | length')" >> $GITHUB_OUTPUT
-          
+
           echo "## Discovered Roles" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Found $(echo $ROLES | jq '. | length') roles with molecule tests:" >> $GITHUB_STEP_SUMMARY
@@ -89,7 +89,7 @@ jobs:
         run: |
           echo "## Syntax Check Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           FAILED=0
           # Find all playbooks in subdirectories
           for playbook in $(find playbooks -name "*.yml" -type f | sort); do
@@ -105,7 +105,7 @@ jobs:
               FAILED=1
             fi
           done
-          
+
           exit $FAILED
 
   # Run molecule tests on a subset of roles (quick check)
@@ -124,7 +124,7 @@ jobs:
           - services/docker
           - services/nginx
         platform: [ubuntu]
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -154,7 +154,7 @@ jobs:
               echo "image=geerlingguy/docker-rockylinux9-ansible:latest" >> $GITHUB_OUTPUT
               ;;
           esac
-          
+
           INSTANCE=$(echo "${{ matrix.role }}-${{ matrix.platform }}" | tr '/' '-')
           echo "instance=${INSTANCE}" >> $GITHUB_OUTPUT
 
@@ -163,9 +163,9 @@ jobs:
           ROLE_DIR="roles/${{ matrix.role }}"
           INSTANCE="${{ steps.config.outputs.instance }}"
           IMAGE="${{ steps.config.outputs.image }}"
-          
+
           mkdir -p "$ROLE_DIR/molecule/ci"
-          
+
           cat > "$ROLE_DIR/molecule/ci/molecule.yml" << EOF
           ---
           driver:
@@ -198,13 +198,13 @@ jobs:
         working-directory: roles/${{ matrix.role }}
         run: |
           START=$(date +%s)
-          
+
           if molecule test -s ci 2>&1 | tee molecule.log; then
             echo "result=passed" >> $GITHUB_OUTPUT
           else
             echo "result=failed" >> $GITHUB_OUTPUT
           fi
-          
+
           END=$(date +%s)
           echo "duration=$((END - START))s" >> $GITHUB_OUTPUT
         continue-on-error: true
@@ -213,7 +213,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: molecule-log-${{ matrix.role }}-${{ matrix.platform }}
+          name: molecule-log-${{ steps.config.outputs.instance }}
           path: roles/${{ matrix.role }}/molecule.log
           retention-days: 5
 
@@ -234,35 +234,35 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          
+
           # Discover
           if [ "${{ needs.discover.result }}" == "success" ]; then
             echo "| 🔍 Discover | ✅ Found ${{ needs.discover.outputs.role_count }} roles |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| 🔍 Discover | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           # Lint
           if [ "${{ needs.lint.result }}" == "success" ]; then
             echo "| 📝 Lint | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| 📝 Lint | ⚠️ Issues found |" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           # Syntax
           if [ "${{ needs.syntax.result }}" == "success" ]; then
             echo "| 🔧 Syntax | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| 🔧 Syntax | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           # Molecule
           if [ "${{ needs.molecule-quick.result }}" == "success" ]; then
             echo "| 🧪 Molecule Quick | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| 🧪 Molecule Quick | ❌ Some tests failed |" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

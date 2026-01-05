@@ -62,7 +62,7 @@ jobs:
               echo "image=geerlingguy/docker-rockylinux9-ansible:latest" >> $GITHUB_OUTPUT
               ;;
           esac
-          
+
           INSTANCE=$(echo "${{ inputs.role }}-${{ inputs.platform }}" | tr '/' '-')
           echo "instance=${INSTANCE}" >> $GITHUB_OUTPUT
 
@@ -71,9 +71,9 @@ jobs:
           ROLE_DIR="roles/${{ inputs.role }}"
           INSTANCE="${{ steps.config.outputs.instance }}"
           IMAGE="${{ steps.config.outputs.image }}"
-          
+
           mkdir -p "$ROLE_DIR/molecule/ci"
-          
+
           cat > "$ROLE_DIR/molecule/ci/molecule.yml" << EOF
           ---
           driver:
@@ -106,13 +106,13 @@ jobs:
         working-directory: roles/${{ inputs.role }}
         run: |
           START=$(date +%s)
-          
+
           if molecule test -s ci 2>&1 | tee molecule.log; then
             echo "result=passed" >> $GITHUB_OUTPUT
           else
             echo "result=failed" >> $GITHUB_OUTPUT
           fi
-          
+
           END=$(date +%s)
           echo "duration=$((END - START))s" >> $GITHUB_OUTPUT
         continue-on-error: true
@@ -121,7 +121,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: molecule-log-${{ inputs.role }}-${{ inputs.platform }}
+          name: molecule-log-${{ steps.config.outputs.instance }}
           path: roles/${{ inputs.role }}/molecule.log
           retention-days: 5
 
