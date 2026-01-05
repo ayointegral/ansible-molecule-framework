@@ -1,0 +1,31 @@
+---
+galaxy_info:
+  author: Ansible Molecule Testing
+  description: AWS EC2 Instance Metadata Service (IMDS) simulation for testing
+  company: Testing Framework
+  license: MIT
+  min_ansible_version: "2.12"
+  role_name: ec2_simulation
+  namespace: cloud_aws
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - focal
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+  galaxy_tags:
+    - aws
+    - ec2
+    - cloud
+    - simulation
+    - testing
+
+dependencies: []
+

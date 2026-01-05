@@ -1,0 +1,29 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Update apt cache (Debian)
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+  vars:
+    # Use packages that don't conflict with minimal images
+    packages_install:
+      - vim
+      - wget
+
+    packages_install_debian:
+      - htop
+      - curl
+
+    packages_install_redhat:
+      - htop
+      # Note: curl conflicts with curl-minimal in RHEL 9 minimal images
+
+  roles:
+    - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"

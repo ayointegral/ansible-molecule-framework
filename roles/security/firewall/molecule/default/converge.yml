@@ -1,0 +1,66 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    firewall_enabled: true
+    firewall_default_policy: deny
+    firewall_open_ports:
+      - port: 22
+        protocol: tcp
+        comment: "SSH access"
+      - port: 80
+        protocol: tcp
+        comment: "HTTP access"
+      - port: 443
+        protocol: tcp
+        comment: "HTTPS access"
+    # Avoid using service profiles as they may not exist in containers
+    firewall_allowed_services: []
+    firewall_allowed_sources:
+      - ip: 10.10.10.0/24
+        ports:
+          - 3306
+          - 5432
+        protocol: tcp
+        comment: "Database access from internal network"
+    firewall_blocked_sources:
+      - ip: 192.168.100.100
+        comment: "Blocked malicious IP"
+    firewall_allow_icmp: true
+    firewall_allow_loopback: true
+    firewall_allow_established: true
+    firewall_ssh_rate_limit: true
+    firewall_log_dropped: false
+    firewall_persistent: true
+    firewall_ipv6_enabled: true
+
+  pre_tasks:
+    - name: Install required packages for Ubuntu
+      ansible.builtin.apt:
+        name:
+          - ufw
+          - iptables
+        state: present
+        update_cache: true
+      when: ansible_os_family == 'Debian'
+
+    - name: Install required packages for RedHat
+      ansible.builtin.dnf:
+        name:
+          - firewalld
+          - iptables
+        state: present
+      when: ansible_os_family == 'RedHat'
+
+    - name: Ensure D-Bus is running for firewalld
+      ansible.builtin.systemd:
+        name: dbus
+        state: started
+        enabled: true
+      when: ansible_os_family == 'RedHat'
+
+  roles:
+    - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"

@@ -1,0 +1,20 @@
+---
+# SSH Configuration tasks
+
+- name: Configure SSH server
+  ansible.builtin.template:
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: '0600'
+    backup: true
+    validate: '/usr/sbin/sshd -t -f %s'
+  notify: Restart sshd
+  when: base_manage_sshd_config | default(true)
+
+- name: Ensure SSH service is enabled and started
+  ansible.builtin.service:
+    name: "{{ base_ssh_service | default('sshd') }}"
+    state: started
+    enabled: true

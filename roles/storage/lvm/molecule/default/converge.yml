@@ -1,0 +1,38 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+
+  pre_tasks:
+    - name: Update apt cache (Debian/Ubuntu)
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == 'Debian'
+
+  vars:
+    # LVM packages to install
+    lvm_packages:
+      - lvm2
+
+    # Empty lists - LVM requires real block devices or loopback
+    # Testing package installation and role loading only
+    lvm_volume_groups: []
+    lvm_logical_volumes: []
+    lvm_thin_pools: []
+    lvm_thin_volumes: []
+
+    # Default settings
+    lvm_default_filesystem: ext4
+    lvm_default_state: present
+    lvm_resize_filesystem: true
+    lvm_default_mount_options: defaults
+
+    # Filesystem packages
+    lvm_filesystem_packages:
+      ext4: e2fsprogs
+      xfs: xfsprogs
+      btrfs: btrfs-progs
+
+  roles:
+    - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"

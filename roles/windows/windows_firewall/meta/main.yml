@@ -1,0 +1,25 @@
+---
+galaxy_info:
+  author: Ansible Molecule Testing
+  description: Windows Firewall configuration
+  company: Testing Framework
+  license: MIT
+  min_ansible_version: "2.12"
+  role_name: windows_firewall
+  namespace: windows
+  platforms:
+    - name: Windows
+      versions:
+        - "2019"
+        - "2022"
+  galaxy_tags:
+    - windows
+    - firewall
+    - security
+    - microsoft
+
+dependencies: []
+
+
+# Note: This role requires a Windows host for molecule testing
+# Windows containers can only run on Windows hosts

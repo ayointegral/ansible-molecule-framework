@@ -1,0 +1,29 @@
+---
+# Database creation tasks for postgresql role
+
+- name: Create PostgreSQL databases
+  become: true
+  become_user: postgres
+  community.postgresql.postgresql_db:
+    name: "{{ item.name }}"
+    owner: "{{ item.owner | default('postgres') }}"
+    encoding: "{{ item.encoding | default('UTF8') }}"
+    lc_collate: "{{ item.lc_collate | default('C.UTF-8') }}"
+    lc_ctype: "{{ item.lc_ctype | default('C.UTF-8') }}"
+    template: "{{ item.template | default('template0') }}"
+    state: present
+  loop: "{{ postgresql_databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Install PostgreSQL extensions
+  become: true
+  become_user: postgres
+  community.postgresql.postgresql_ext:
+    name: "{{ item.name }}"
+    db: "{{ item.db }}"
+    state: present
+  loop: "{{ postgresql_extensions }}"
+  loop_control:
+    label: "{{ item.name }} in {{ item.db }}"
+  when: postgresql_extensions | length > 0

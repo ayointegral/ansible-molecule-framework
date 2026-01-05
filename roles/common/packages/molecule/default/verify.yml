@@ -1,0 +1,59 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Verify common packages are installed
+      ansible.builtin.command: "which {{ item }}"
+      loop:
+        - vim
+        - curl
+        - wget
+      register: package_check
+      changed_when: false
+      failed_when: package_check.rc != 0
+
+    - name: Verify htop is installed
+      ansible.builtin.command: which htop
+      register: htop_check
+      changed_when: false
+      failed_when: htop_check.rc != 0
+
+    - name: Get package manager info (Debian)
+      ansible.builtin.command: dpkg -l vim
+      register: dpkg_result
+      changed_when: false
+      when: ansible_os_family == "Debian"
+
+    - name: Verify vim package state (Debian)
+      ansible.builtin.assert:
+        that:
+          - "'ii' in dpkg_result.stdout"
+        fail_msg: "vim package is not properly installed"
+        success_msg: "vim package is correctly installed"
+      when: ansible_os_family == "Debian"
+
+    - name: Get package manager info (RedHat)
+      ansible.builtin.command: rpm -q vim-enhanced
+      register: rpm_result
+      changed_when: false
+      failed_when: false
+      when: ansible_os_family == "RedHat"
+
+    - name: Verify vim package state (RedHat)
+      ansible.builtin.command: rpm -q vim-minimal
+      register: rpm_vim_minimal
+      changed_when: false
+      when:
+        - ansible_os_family == "RedHat"
+        - rpm_result.rc != 0
+
+    - name: Assert vim is installed (RedHat)
+      ansible.builtin.assert:
+        that:
+          - rpm_result.rc == 0 or rpm_vim_minimal.rc == 0
+        fail_msg: "vim package is not installed"
+        success_msg: "vim package is correctly installed"
+      when: ansible_os_family == "RedHat"

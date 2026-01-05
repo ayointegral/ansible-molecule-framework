@@ -1,0 +1,58 @@
+---
+# defaults/main.yml - Default variables for NFS role
+
+# Role mode: 'server', 'client', or 'both'
+nfs_role: "client"
+
+# NFS version to use
+nfs_version: 4
+
+# NFS server configuration
+nfs_exports: []
+# Example:
+# nfs_exports:
+#   - path: /srv/nfs/data
+#     hosts:
+#       - name: "192.168.1.0/24"
+#         options: "rw,sync,no_subtree_check,no_root_squash"
+#     owner: nobody
+#     group: nogroup
+#     mode: "0755"
+#     create: true
+
+# NFS client configuration
+nfs_mounts: []
+# Example:
+# nfs_mounts:
+#   - src: "192.168.1.10:/srv/nfs/data"
+#     path: /mnt/nfs/data
+#     fstype: nfs4
+#     opts: "rw,sync,hard,intr"
+#     state: mounted
+#     create_mountpoint: true
+
+# Default mount options
+nfs_default_mount_opts: "rw,sync,hard,intr"
+
+# NFSv4 specific settings
+nfs_domain: "localdomain"
+nfs_idmapd_enabled: true
+
+# Service management
+nfs_server_enabled: true
+nfs_server_state: started
+
+# Firewall configuration (when firewalld is available)
+nfs_configure_firewall: false
+nfs_firewall_zone: public
+
+# Package names (distribution-specific overrides in vars/)
+nfs_server_packages:
+  - nfs-kernel-server
+
+nfs_client_packages:
+  - nfs-common
+
+# Service names
+nfs_server_service: "nfs-kernel-server"
+nfs_rpcbind_service: "rpcbind"

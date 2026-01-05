@@ -1,0 +1,48 @@
+---
+# User management defaults
+
+# Users to create
+users: []
+# Example:
+#   - name: deploy
+#     comment: "Deploy user"
+#     uid: 1001
+#     groups:
+#       - sudo
+#       - docker
+#     shell: /bin/bash
+#     create_home: true
+#     password: "{{ 'password' | password_hash('sha512') }}"
+#     ssh_keys:
+#       - "ssh-rsa AAAAB... user@example.com"
+
+# Users to remove
+users_remove: []
+# Example:
+#   - name: olduser
+#     remove_home: true
+
+# Groups to create
+user_groups: []
+# Example:
+#   - name: developers
+#     gid: 2000
+
+# Groups to remove
+groups_remove: []
+
+# Default shell for new users
+users_default_shell: /bin/bash
+
+# Default home directory base
+users_home_base: /home
+
+# SSH authorized keys settings
+users_ssh_key_type: rsa
+users_ssh_key_bits: 4096
+
+# Whether to create .ssh directory
+users_create_ssh_dir: true
+
+# Default umask for new users
+users_default_umask: "022"

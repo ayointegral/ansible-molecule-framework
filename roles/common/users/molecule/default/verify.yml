@@ -1,0 +1,61 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Check group developers exists
+      ansible.builtin.group:
+        name: developers
+        state: present
+      check_mode: true
+      register: group_developers
+
+    - name: Assert developers group exists
+      ansible.builtin.assert:
+        that: not group_developers.changed
+        fail_msg: "Group developers does not exist"
+
+    - name: Check testuser1 exists
+      ansible.builtin.user:
+        name: testuser1
+        state: present
+      check_mode: true
+      register: user_testuser1
+
+    - name: Assert testuser1 exists
+      ansible.builtin.assert:
+        that: not user_testuser1.changed
+        fail_msg: "User testuser1 does not exist"
+
+    - name: Check testuser2 exists
+      ansible.builtin.user:
+        name: testuser2
+        state: present
+      check_mode: true
+      register: user_testuser2
+
+    - name: Assert testuser2 exists
+      ansible.builtin.assert:
+        that: not user_testuser2.changed
+        fail_msg: "User testuser2 does not exist"
+
+    - name: Check testuser1 SSH authorized_keys file exists
+      ansible.builtin.stat:
+        path: /home/testuser1/.ssh/authorized_keys
+      register: auth_keys
+
+    - name: Assert authorized_keys exists
+      ansible.builtin.assert:
+        that: auth_keys.stat.exists
+        fail_msg: "Authorized keys file not found for testuser1"
+
+    - name: Check testuser2 sudoers file exists
+      ansible.builtin.stat:
+        path: /etc/sudoers.d/testuser2
+      register: sudoers_file
+
+    - name: Assert sudoers file exists
+      ansible.builtin.assert:
+        that: sudoers_file.stat.exists
+        fail_msg: "Sudoers file not found for testuser2"

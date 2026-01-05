@@ -1,0 +1,127 @@
+---
+# Verify playbook for nfs role
+# Container-aware verification that handles mock exportfs
+
+- name: Verify NFS installation
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Set expected service name
+      ansible.builtin.set_fact:
+        expected_nfs_service: "{{ 'nfs-kernel-server' if ansible_os_family == 'Debian' else 'nfs-server' }}"
+
+    - name: Verify NFS server packages are installed (Debian)
+      ansible.builtin.package:
+        name: nfs-kernel-server
+        state: present
+      check_mode: true
+      register: nfs_pkg_debian
+      failed_when: nfs_pkg_debian.changed
+      when: ansible_os_family == 'Debian'
+
+    - name: Verify NFS server packages are installed (RedHat)
+      ansible.builtin.package:
+        name: nfs-utils
+        state: present
+      check_mode: true
+      register: nfs_pkg_redhat
+      failed_when: nfs_pkg_redhat.changed
+      when: ansible_os_family == 'RedHat'
+
+    - name: Get service facts
+      ansible.builtin.service_facts:
+
+    - name: Verify NFS service unit exists
+      ansible.builtin.assert:
+        that:
+          - "expected_nfs_service ~ '.service' in services or expected_nfs_service in services"
+        fail_msg: "NFS service {{ expected_nfs_service }} not found"
+        success_msg: "NFS service {{ expected_nfs_service }} exists"
+
+    - name: Verify export directory exists
+      ansible.builtin.stat:
+        path: /srv/nfs/data
+      register: export_dir
+      failed_when: not export_dir.stat.exists
+
+    - name: Verify exports file exists
+      ansible.builtin.stat:
+        path: /etc/exports
+      register: exports_file
+      failed_when: not exports_file.stat.exists
+
+    - name: Verify export is in exports file
+      ansible.builtin.command: grep -q "/srv/nfs/data" /etc/exports
+      register: export_check
+      changed_when: false
+      failed_when: export_check.rc != 0
+
+    - name: Read exports file content
+      ansible.builtin.slurp:
+        src: /etc/exports
+      register: exports_content
+
+    - name: Display exports file content
+      ansible.builtin.debug:
+        msg: "{{ exports_content.content | b64decode }}"
+
+    - name: Check if real NFS kernel support is available
+      ansible.builtin.command: lsmod
+      register: lsmod_output
+      changed_when: false
+      failed_when: false
+
+    - name: Set NFS kernel support fact
+      ansible.builtin.set_fact:
+        nfs_kernel_available: "{{ 'nfsd' in lsmod_output.stdout }}"
+
+    - name: Check active exports (kernel NFS)
+      ansible.builtin.command: exportfs -v
+      register: active_exports
+      changed_when: false
+      failed_when: false
+
+    - name: Verify export is active (when kernel NFS available)
+      ansible.builtin.assert:
+        that:
+          - "'/srv/nfs/data' in active_exports.stdout"
+        fail_msg: "Export /srv/nfs/data is not active (may be expected in containers)"
+        success_msg: "Export /srv/nfs/data is active"
+      when: nfs_kernel_available
+
+    - name: Check if loopback mount succeeded
+      ansible.builtin.command: mount | grep nfs_test
+      register: mount_check
+      changed_when: false
+      failed_when: false
+
+    - name: Verify test file via NFS mount (if mount succeeded)
+      ansible.builtin.stat:
+        path: /mnt/nfs_test/testfile.txt
+      register: nfs_testfile
+      when: mount_check.rc == 0
+
+    - name: Display NFS loopback test result
+      ansible.builtin.debug:
+        msg: >-
+          {% if mount_check.rc == 0 and nfs_testfile.stat.exists | default(false) %}
+          SUCCESS: NFS loopback mount working - test file accessible via NFS!
+          {% elif mount_check.rc == 0 %}
+          PARTIAL: NFS mounted but test file not found
+          {% else %}
+          EXPECTED: NFS loopback mount not available in this container environment.
+          Configuration verified via /etc/exports file.
+          {% endif %}
+
+    - name: Display verification summary
+      ansible.builtin.debug:
+        msg: |
+          NFS Role Verification Summary:
+          - Packages: INSTALLED
+          - Service unit: EXISTS
+          - Export directory: EXISTS
+          - Exports file: CONFIGURED
+          - Kernel NFS: {{ 'AVAILABLE' if nfs_kernel_available else 'NOT AVAILABLE (container limitation)' }}
+          - Loopback mount: {{ 'WORKING' if mount_check.rc == 0 else 'NOT TESTED (no kernel NFS)' }}

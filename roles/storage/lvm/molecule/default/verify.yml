@@ -1,0 +1,60 @@
+---
+- name: Verify LVM role
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Check if LVM is installed
+      ansible.builtin.command: which lvm
+      register: lvm_check
+      changed_when: false
+      failed_when: false
+
+    - name: Verify LVM is available
+      ansible.builtin.assert:
+        that:
+          - lvm_check.rc == 0
+        fail_msg: "LVM command not found"
+        success_msg: "LVM is installed and available"
+
+    - name: Get LVM version
+      ansible.builtin.command: lvm version
+      register: lvm_version
+      changed_when: false
+      failed_when: false
+
+    - name: Display LVM version
+      ansible.builtin.debug:
+        msg: "{{ lvm_version.stdout_lines[0] | default('LVM version unknown') }}"
+      when: lvm_version.rc == 0
+
+    - name: Check for pvcreate command
+      ansible.builtin.command: which pvcreate
+      register: pvcreate_check
+      changed_when: false
+      failed_when: false
+
+    - name: Check for vgcreate command
+      ansible.builtin.command: which vgcreate
+      register: vgcreate_check
+      changed_when: false
+      failed_when: false
+
+    - name: Check for lvcreate command
+      ansible.builtin.command: which lvcreate
+      register: lvcreate_check
+      changed_when: false
+      failed_when: false
+
+    - name: Verify role completed successfully
+      ansible.builtin.debug:
+        msg: |
+          LVM Role Verification Summary:
+          - lvm command: {{ 'INSTALLED' if lvm_check.rc == 0 else 'NOT INSTALLED' }}
+          - pvcreate: {{ 'AVAILABLE' if pvcreate_check.rc == 0 else 'NOT AVAILABLE' }}
+          - vgcreate: {{ 'AVAILABLE' if vgcreate_check.rc == 0 else 'NOT AVAILABLE' }}
+          - lvcreate: {{ 'AVAILABLE' if lvcreate_check.rc == 0 else 'NOT AVAILABLE' }}
+          - Role execution: SUCCESSFUL
+          
+          Note: VG/LV creation tests skipped (no block devices in container)

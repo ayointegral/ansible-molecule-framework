@@ -1,0 +1,37 @@
+---
+# Node Exporter defaults
+
+node_exporter_version: "1.7.0"
+node_exporter_user: node_exporter
+node_exporter_group: node_exporter
+
+node_exporter_install_dir: /opt/node_exporter
+node_exporter_textfile_dir: /var/lib/node_exporter/textfile_collector
+
+# Web configuration
+node_exporter_listen_address: "0.0.0.0:9100"
+node_exporter_web_telemetry_path: /metrics
+
+# Collectors to enable (empty = defaults)
+node_exporter_enabled_collectors: []
+# Example:
+#   - systemd
+#   - textfile
+#   - filesystem
+
+# Collectors to disable
+node_exporter_disabled_collectors: []
+# Example:
+#   - mdadm
+
+# Additional command line arguments
+node_exporter_extra_args: []
+# Example:
+#   - "--collector.textfile.directory=/var/lib/node_exporter/textfile_collector"
+
+# Service configuration
+node_exporter_service_state: started
+node_exporter_service_enabled: true
+
+# Whether to configure firewall
+node_exporter_configure_firewall: false

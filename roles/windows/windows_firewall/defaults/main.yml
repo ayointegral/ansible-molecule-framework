@@ -1,0 +1,58 @@
+---
+# Windows Firewall configuration
+windows_firewall_state: enabled
+windows_firewall_profiles:
+  - Domain
+  - Private
+  - Public
+
+# Default inbound action
+windows_firewall_default_inbound_action: Block
+windows_firewall_default_outbound_action: Allow
+
+# Firewall rules to create
+windows_firewall_rules:
+  - name: "Allow HTTP"
+    direction: In
+    action: Allow
+    protocol: TCP
+    localport: 80
+    enabled: true
+
+  - name: "Allow HTTPS"
+    direction: In
+    action: Allow
+    protocol: TCP
+    localport: 443
+    enabled: true
+
+  - name: "Allow WinRM"
+    direction: In
+    action: Allow
+    protocol: TCP
+    localport: 5985
+    enabled: true
+
+  - name: "Allow WinRM-HTTPS"
+    direction: In
+    action: Allow
+    protocol: TCP
+    localport: 5986
+    enabled: true
+
+  - name: "Allow RDP"
+    direction: In
+    action: Allow
+    protocol: TCP
+    localport: 3389
+    enabled: true
+
+# Rules to remove
+windows_firewall_rules_remove: []
+
+# Logging settings
+windows_firewall_logging_enabled: true
+windows_firewall_log_dropped: true
+windows_firewall_log_allowed: false
+windows_firewall_log_path: "%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log"
+windows_firewall_log_max_size: 4096

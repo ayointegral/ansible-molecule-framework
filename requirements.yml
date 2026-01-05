@@ -1,0 +1,51 @@
+---
+# Ansible Galaxy Requirements
+# Install with: ansible-galaxy install -r requirements.yml
+
+collections:
+  # Core Ansible collections
+  - name: ansible.posix
+    version: ">=1.5.0"
+  - name: ansible.utils
+    version: ">=2.10.0"
+  - name: community.general
+    version: ">=7.0.0"
+  - name: community.crypto
+    version: ">=2.14.0"
+  - name: community.docker
+    version: ">=3.4.0"
+  - name: containers.podman
+    version: ">=1.10.0"
+  
+  # Cloud provider collections
+  - name: amazon.aws
+    version: ">=6.0.0"
+  - name: azure.azcollection
+    version: ">=1.15.0"
+  - name: google.cloud
+    version: ">=1.1.0"
+  
+  # Database collections
+  - name: community.postgresql
+    version: ">=2.4.0"
+  - name: community.mysql
+    version: ">=3.7.0"
+  - name: community.mongodb
+    version: ">=1.6.0"
+  
+  # Windows collections
+  - name: ansible.windows
+    version: ">=1.14.0"
+  - name: community.windows
+    version: ">=1.13.0"
+  
+  # Molecule testing
+  - name: ansible.molecule
+    version: ">=0.1.0"
+
+roles:
+  # Helpful roles for testing
+  - name: geerlingguy.docker
+    version: "6.1.0"
+  - name: geerlingguy.pip
+    version: "2.2.0"

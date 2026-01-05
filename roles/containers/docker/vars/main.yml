@@ -1,0 +1,38 @@
+---
+# Build the complete daemon configuration
+_docker_daemon_base_config: >-
+  {{
+    docker_daemon_config |
+    combine(docker_daemon_config_extra) |
+    combine({'features': {'buildkit': docker_buildkit_enabled}} if docker_buildkit_enabled else {})
+  }}
+
+_docker_daemon_with_data_root: >-
+  {{
+    _docker_daemon_base_config |
+    combine({'data-root': docker_data_root} if docker_data_root else {})
+  }}
+
+_docker_daemon_with_insecure_registries: >-
+  {{
+    _docker_daemon_with_data_root |
+    combine({'insecure-registries': docker_insecure_registries} if docker_insecure_registries else {})
+  }}
+
+_docker_daemon_with_mirrors: >-
+  {{
+    _docker_daemon_with_insecure_registries |
+    combine({'registry-mirrors': docker_registry_mirrors} if docker_registry_mirrors else {})
+  }}
+
+_docker_daemon_with_dns: >-
+  {{
+    _docker_daemon_with_mirrors |
+    combine({'dns': docker_dns_servers} if docker_dns_servers else {})
+  }}
+
+_docker_daemon_config: >-
+  {{
+    _docker_daemon_with_dns |
+    combine({'default-address-pools': docker_default_address_pools} if docker_default_address_pools else {})
+  }}

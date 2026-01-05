@@ -1,0 +1,13 @@
+---
+# Windows Features configuration
+windows_features_install:
+  - NET-Framework-45-Core
+  - NET-Framework-45-ASPNET
+
+windows_features_remove: []
+
+# Management tools
+windows_features_include_management_tools: true
+
+# Restart behavior
+windows_features_reboot_if_required: false

@@ -1,0 +1,83 @@
+---
+# defaults/main.yml - Default variables for LVM role
+
+# List of physical volumes to create
+# Example:
+# lvm_physical_volumes:
+#   - device: /dev/sdb
+#   - device: /dev/sdc
+#     force: false
+lvm_physical_volumes: []
+
+# List of volume groups to create
+# Example:
+# lvm_volume_groups:
+#   - name: vg_data
+#     pvs:
+#       - /dev/sdb
+#       - /dev/sdc
+#     pesize: 4
+#     state: present
+lvm_volume_groups: []
+
+# List of logical volumes to create
+# Example:
+# lvm_logical_volumes:
+#   - name: lv_data
+#     vg: vg_data
+#     size: 10G
+#     state: present
+#     filesystem: ext4
+#     mount_point: /data
+#     mount_options: defaults
+#     mount_state: mounted
+#   - name: lv_logs
+#     vg: vg_data
+#     size: 100%FREE
+#     filesystem: xfs
+#     mount_point: /var/logs
+lvm_logical_volumes: []
+
+# Thin pool configuration
+# Example:
+# lvm_thin_pools:
+#   - name: thin_pool
+#     vg: vg_data
+#     size: 50G
+lvm_thin_pools: []
+
+# Thin volumes (require thin pool)
+# Example:
+# lvm_thin_volumes:
+#   - name: thin_lv1
+#     vg: vg_data
+#     thin_pool: thin_pool
+#     size: 100G
+#     filesystem: ext4
+#     mount_point: /thin_data
+lvm_thin_volumes: []
+
+# Default filesystem type
+lvm_default_filesystem: ext4
+
+# Default mount options
+lvm_default_mount_options: defaults
+
+# Whether to force PV creation (destroy existing data)
+lvm_force_pv_create: false
+
+# Whether to resize filesystems when LV is resized
+lvm_resize_filesystem: true
+
+# Default state for LVs and VGs
+lvm_default_state: present
+
+# Packages required for LVM
+lvm_packages:
+  - lvm2
+
+# Additional packages for specific filesystems
+lvm_filesystem_packages:
+  xfs: xfsprogs
+  ext4: e2fsprogs
+  btrfs: btrfs-progs

@@ -1,0 +1,55 @@
+---
+# Molecule verify playbook for common/base
+# Simplified verification for container testing
+
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Check essential directories exist
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: dir_check
+      loop:
+        - /opt/ansible
+        - /var/log/ansible
+      failed_when: not dir_check.stat.exists
+
+    - name: Check /opt/ansible directory properties
+      ansible.builtin.stat:
+        path: /opt/ansible
+      register: opt_ansible
+      failed_when: >
+        not opt_ansible.stat.exists or
+        opt_ansible.stat.mode != '0755'
+
+    - name: Check /var/log/ansible directory properties
+      ansible.builtin.stat:
+        path: /var/log/ansible
+      register: log_ansible
+      failed_when: >
+        not log_ansible.stat.exists or
+        log_ansible.stat.mode != '0755'
+
+    - name: Check minimal packages are available (tar, gzip)
+      ansible.builtin.command: "which {{ item }}"
+      loop:
+        - tar
+        - gzip
+      changed_when: false
+      failed_when: false
+      register: pkg_check
+
+    - name: Verify binaries exist
+      ansible.builtin.assert:
+        that:
+          - pkg_check.results[0].rc == 0
+          - pkg_check.results[1].rc == 0
+        fail_msg: "Required binaries not found"
+        success_msg: "All required binaries are present"
+
+    - name: Verify role completed successfully
+      ansible.builtin.debug:
+        msg: "common/base role verification passed!"

@@ -1,0 +1,34 @@
+---
+# Debian/Ubuntu installation tasks for Podman
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install required dependencies
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+
+- name: Install Podman
+  ansible.builtin.apt:
+    name: podman
+    state: present
+
+- name: Install additional Podman packages
+  ansible.builtin.apt:
+    name: "{{ podman_additional_packages }}"
+    state: present
+  when: podman_additional_packages | length > 0
+
+- name: Install podman-compose
+  ansible.builtin.apt:
+    name: podman-compose
+    state: present
+  when: podman_install_compose | bool

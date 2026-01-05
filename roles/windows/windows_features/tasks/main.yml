@@ -1,0 +1,26 @@
+---
+# Windows Features installation and management
+# Requires Windows Server with Ansible WinRM configured
+
+- name: Install Windows Features
+  ansible.windows.win_feature:
+    name: "{{ windows_features_install }}"
+    state: present
+    include_management_tools: "{{ windows_features_include_management_tools }}"
+  register: feature_install
+  when: windows_features_install | length > 0
+
+- name: Remove Windows Features
+  ansible.windows.win_feature:
+    name: "{{ windows_features_remove }}"
+    state: absent
+  register: feature_remove
+  when: windows_features_remove | length > 0
+
+- name: Reboot if required
+  ansible.windows.win_reboot:
+    reboot_timeout: 600
+    post_reboot_delay: 30
+  when:
+    - windows_features_reboot_if_required
+    - (feature_install.reboot_required | default(false)) or (feature_remove.reboot_required | default(false))

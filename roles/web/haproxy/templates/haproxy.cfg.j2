@@ -1,0 +1,137 @@
+# {{ ansible_managed }}
+# HAProxy Configuration File
+
+#---------------------------------------------------------------------
+# Global settings
+#---------------------------------------------------------------------
+global
+{% for log in haproxy_global.log %}
+    log {{ log }}
+{% endfor %}
+    chroot {{ haproxy_global.chroot }}
+    stats socket {{ haproxy_global.stats_socket }}
+    stats timeout {{ haproxy_global.stats_timeout }}
+    user {{ haproxy_global.user }}
+    group {{ haproxy_global.group }}
+{% if haproxy_global.daemon %}
+    daemon
+{% endif %}
+    maxconn {{ haproxy_global.maxconn }}
+
+    # SSL/TLS Settings
+    ssl-default-bind-ciphers {{ haproxy_global.ssl_default_bind_ciphers }}
+    ssl-default-bind-ciphersuites {{ haproxy_global.ssl_default_bind_ciphersuites }}
+    ssl-default-bind-options {{ haproxy_global.ssl_default_bind_options }}
+    ssl-default-server-ciphers {{ haproxy_global.ssl_default_server_ciphers }}
+    ssl-default-server-ciphersuites {{ haproxy_global.ssl_default_server_ciphersuites }}
+    ssl-default-server-options {{ haproxy_global.ssl_default_server_options }}
+    tune.ssl.default-dh-param {{ haproxy_global.tune_ssl_default_dh_param }}
+{% for line in haproxy_global_extra %}
+    {{ line }}
+{% endfor %}
+
+#---------------------------------------------------------------------
+# Defaults
+#---------------------------------------------------------------------
+defaults
+    mode {{ haproxy_defaults.mode }}
+    log {{ haproxy_defaults.log }}
+{% for opt in haproxy_defaults.option %}
+    option {{ opt }}
+{% endfor %}
+    retries {{ haproxy_defaults.retries }}
+{% for timeout in haproxy_defaults.timeout %}
+    timeout {{ timeout }}
+{% endfor %}
+{% for errorfile in haproxy_defaults.errorfile | default([]) %}
+    errorfile {{ errorfile }}
+{% endfor %}
+{% for line in haproxy_defaults_extra %}
+    {{ line }}
+{% endfor %}
+
+#---------------------------------------------------------------------
+# Statistics
+#---------------------------------------------------------------------
+{% if haproxy_stats_enabled %}
+listen stats
+    bind {{ haproxy_stats.bind }}
+    mode http
+    stats enable
+    stats uri {{ haproxy_stats.uri }}
+    stats realm {{ haproxy_stats.realm }}
+    stats auth {{ haproxy_stats.auth }}
+    stats refresh {{ haproxy_stats.refresh }}
+{% if haproxy_stats.admin is defined %}
+    stats admin {{ haproxy_stats.admin }}
+{% endif %}
+{% endif %}
+
+#---------------------------------------------------------------------
+# Frontend configurations
+#---------------------------------------------------------------------
+{% for frontend in haproxy_frontends %}
+frontend {{ frontend.name }}
+    bind {{ frontend.bind }}
+    mode {{ frontend.mode }}
+{% for opt in frontend.options | default([]) %}
+    option {{ opt }}
+{% endfor %}
+{% for acl in frontend.acls | default([]) %}
+    acl {{ acl }}
+{% endfor %}
+{% for use_backend in frontend.use_backends | default([]) %}
+    use_backend {{ use_backend }}
+{% endfor %}
+{% if frontend.default_backend is defined %}
+    default_backend {{ frontend.default_backend }}
+{% endif %}
+{% for line in frontend.extra_config | default([]) %}
+    {{ line }}
+{% endfor %}
+
+{% endfor %}
+
+#---------------------------------------------------------------------
+# Backend configurations
+#---------------------------------------------------------------------
+{% for backend in haproxy_backends %}
+backend {{ backend.name }}
+    mode {{ backend.mode }}
+    balance {{ backend.balance }}
+{% for opt in backend.options | default([]) %}
+    option {{ opt }}
+{% endfor %}
+{% if backend.http_check_expect is defined %}
+    http-check expect {{ backend.http_check_expect }}
+{% endif %}
+{% for server in backend.servers %}
+    server {{ server.name }} {{ server.address }} {{ server.params | default('') }}
+{% endfor %}
+{% for line in backend.extra_config | default([]) %}
+    {{ line }}
+{% endfor %}
+
+{% endfor %}
+
+#---------------------------------------------------------------------
+# Listen configurations (combined frontend/backend)
+#---------------------------------------------------------------------
+{% for listen in haproxy_listens %}
+listen {{ listen.name }}
+    bind {{ listen.bind }}
+    mode {{ listen.mode }}
+{% if listen.balance is defined %}
+    balance {{ listen.balance }}
+{% endif %}
+{% for opt in listen.options | default([]) %}
+    option {{ opt }}
+{% endfor %}
+{% for server in listen.servers | default([]) %}
+    server {{ server.name }} {{ server.address }} {{ server.params | default('') }}
+{% endfor %}
+{% for line in listen.extra_config | default([]) %}
+    {{ line }}
+{% endfor %}
+
+{% endfor %}

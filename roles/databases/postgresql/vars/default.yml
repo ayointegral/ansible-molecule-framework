@@ -1,0 +1,6 @@
+---
+# Default variables
+
+postgresql_packages:
+  - postgresql
+  - postgresql-contrib

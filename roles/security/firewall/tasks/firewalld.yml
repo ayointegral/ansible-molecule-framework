@@ -1,0 +1,101 @@
+---
+# Firewalld specific tasks
+
+- name: Ensure firewalld is started and enabled
+  ansible.builtin.systemd:
+    name: firewalld
+    state: started
+    enabled: "{{ firewall_enabled }}"
+
+- name: Set default zone
+  ansible.builtin.command: "firewall-cmd --set-default-zone={{ firewall_default_zone }}"
+  register: default_zone_result
+  changed_when: "'ZONE_ALREADY_SET' not in default_zone_result.stderr"
+  failed_when:
+    - default_zone_result.rc != 0
+    - "'ZONE_ALREADY_SET' not in default_zone_result.stderr"
+
+- name: Open ports in firewalld
+  ansible.posix.firewalld:
+    port: "{{ item.port }}/{{ item.protocol | default('tcp') }}"
+    zone: "{{ item.zone | default(firewall_default_zone) }}"
+    permanent: "{{ firewall_persistent }}"
+    immediate: true
+    state: enabled
+  loop: "{{ firewall_open_ports }}"
+  loop_control:
+    label: "{{ item.port }}/{{ item.protocol | default('tcp') }}"
+
+- name: Allow services in firewalld
+  ansible.posix.firewalld:
+    service: "{{ item.name }}"
+    zone: "{{ item.zone | default(firewall_default_zone) }}"
+    permanent: "{{ firewall_persistent }}"
+    immediate: true
+    state: enabled
+  loop: "{{ firewall_allowed_services }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Add rich rules
+  ansible.posix.firewalld:
+    rich_rule: "{{ item.rule }}"
+    zone: "{{ item.zone | default(firewall_default_zone) }}"
+    permanent: "{{ firewall_persistent }}"
+    immediate: true
+    state: "{{ item.state | default('enabled') }}"
+  loop: "{{ firewall_rich_rules }}"
+  loop_control:
+    label: "{{ item.rule | truncate(50) }}"
+
+- name: Allow source IPs
+  ansible.posix.firewalld:
+    source: "{{ item.ip }}"
+    zone: "{{ item.zone | default('trusted') }}"
+    permanent: "{{ firewall_persistent }}"
+    immediate: true
+    state: enabled
+  loop: "{{ firewall_allowed_sources }}"
+  loop_control:
+    label: "{{ item.ip }}"
+  when: item.ports is not defined
+
+- name: Create rich rules for source IPs with specific ports
+  ansible.posix.firewalld:
+    rich_rule: >-
+      rule family="ipv4" source address="{{ item.0.ip }}"
+      port port="{{ item.1 }}" protocol="{{ item.0.protocol | default('tcp') }}" accept
+    zone: "{{ item.0.zone | default(firewall_default_zone) }}"
+    permanent: "{{ firewall_persistent }}"
+    immediate: true
+    state: enabled
+  loop: "{{ firewall_allowed_sources | subelements('ports', skip_missing=True) }}"
+  loop_control:
+    label: "{{ item.0.ip }}:{{ item.1 }}"
+
+- name: Block source IPs
+  ansible.posix.firewalld:
+    rich_rule: 'rule family="ipv4" source address="{{ item.ip }}" drop'
+    zone: "{{ item.zone | default(firewall_default_zone) }}"
+    permanent: "{{ firewall_persistent }}"
+    immediate: true
+    state: enabled
+  loop: "{{ firewall_blocked_sources }}"
+  loop_control:
+    label: "{{ item.ip }}"
+
+- name: Configure ICMP
+  ansible.posix.firewalld:
+    icmp_block: echo-request
+    zone: "{{ firewall_default_zone }}"
+    permanent: "{{ firewall_persistent }}"
+    immediate: true
+    state: "{{ 'disabled' if firewall_allow_icmp else 'enabled' }}"
+
+- name: Enable logging of dropped packets
+  ansible.builtin.command: >-
+    firewall-cmd --set-log-denied=all
+    {% if firewall_persistent %}--permanent{% endif %}
+  when: firewall_log_dropped | bool
+  changed_when: true
+  notify: Reload firewalld

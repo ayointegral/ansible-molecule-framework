@@ -1,0 +1,95 @@
+---
+# Delegated driver for pre-existing Windows hosts
+#
+# Use this scenario when you have:
+#   - An existing Windows VM (Parallels, UTM, VMware, etc.)
+#   - A remote Windows server
+#   - Windows on cloud (AWS, Azure, GCP)
+#
+# This is the FASTEST option for ARM users with a Windows VM already running.
+
+dependency:
+  name: galaxy
+  options:
+    requirements-file: requirements.yml
+
+driver:
+  name: default
+  options:
+    managed: false
+
+platforms:
+  - name: windows-remote
+    groups:
+      - windows
+
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ALLOW_BROKEN_CONDITIONALS: "true"
+  inventory:
+    host_vars:
+      windows-remote:
+        ansible_host: "${WINDOWS_HOST:-localhost}"
+        ansible_user: "${WINDOWS_USER:-Administrator}"
+        ansible_password: "${WINDOWS_PASSWORD}"
+        ansible_connection: winrm
+        ansible_winrm_transport: ntlm
+        ansible_winrm_server_cert_validation: ignore
+        ansible_port: "${WINDOWS_PORT:-5985}"
+  config_options:
+    defaults:
+      callbacks_enabled: profile_tasks
+
+verifier:
+  name: ansible
+
+scenario:
+  name: delegated
+  test_sequence:
+    - dependency
+    - syntax
+    - converge
+    - idempotence
+    - verify
+
+# =============================================================================
+# SETUP INSTRUCTIONS
+# =============================================================================
+#
+# 1. Prepare Windows Host:
+#    - Enable WinRM:
+#      winrm quickconfig -q
+#      winrm set winrm/config/service/auth @{Basic="true"}
+#      winrm set winrm/config/service @{AllowUnencrypted="true"}
+#
+#    - Or use the ConfigureRemotingForAnsible.ps1 script:
+#      https://github.com/ansible/ansible/blob/devel/examples/scripts/ConfigureRemotingForAnsible.ps1
+#
+# 2. Set environment variables:
+#    export WINDOWS_HOST=192.168.1.100
+#    export WINDOWS_USER=Administrator
+#    export WINDOWS_PASSWORD=YourPassword
+#    export WINDOWS_PORT=5985  # Optional, defaults to 5985
+#
+# 3. Run the test:
+#    molecule test -s delegated
+#
+# =============================================================================
+# ARM64 (Apple Silicon) QUICK START
+# =============================================================================
+#
+# Option A: UTM (Free)
+# 1. Download UTM: https://mac.getutm.app/
+# 2. Download Windows 11 ARM ISO from Microsoft
+# 3. Create VM, install Windows
+# 4. Run WinRM setup commands above
+# 5. Set env vars and run: molecule test -s delegated
+#
+# Option B: Parallels Desktop
+# 1. Install Parallels Desktop
+# 2. Download Windows 11 ARM (Parallels can do this automatically)
+# 3. Run WinRM setup commands above
+# 4. Set env vars and run: molecule test -s delegated
+#
+# =============================================================================

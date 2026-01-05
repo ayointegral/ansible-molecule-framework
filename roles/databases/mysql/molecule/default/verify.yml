@@ -1,0 +1,39 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Check MariaDB package is installed
+      ansible.builtin.package:
+        name: mariadb-server
+        state: present
+      check_mode: true
+      register: mysql_pkg
+
+    - name: Assert MariaDB is installed
+      ansible.builtin.assert:
+        that: not mysql_pkg.changed
+        fail_msg: "MariaDB package is not installed"
+
+    - name: Check MariaDB service is running
+      ansible.builtin.service:
+        name: mariadb
+        state: started
+      check_mode: true
+      register: mysql_svc
+
+    - name: Assert MariaDB service is running
+      ansible.builtin.assert:
+        that: not mysql_svc.changed
+        fail_msg: "MariaDB service is not running"
+
+    - name: Check MySQL socket exists
+      ansible.builtin.stat:
+        path: /var/run/mysqld/mysqld.sock
+      register: mysql_socket
+
+    - name: Assert MySQL socket exists
+      ansible.builtin.assert:
+        that: mysql_socket.stat.exists
+        fail_msg: "MySQL socket does not exist"

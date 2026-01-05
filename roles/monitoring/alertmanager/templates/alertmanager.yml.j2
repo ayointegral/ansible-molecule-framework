@@ -1,0 +1,83 @@
+# Alertmanager configuration file
+# Managed by Ansible
+
+global:
+  resolve_timeout: {{ alertmanager_resolve_timeout }}
+{% if alertmanager_smtp is defined %}
+  smtp_smarthost: '{{ alertmanager_smtp.smarthost }}'
+  smtp_from: '{{ alertmanager_smtp.from }}'
+  smtp_require_tls: {{ alertmanager_smtp.require_tls | lower }}
+{% endif %}
+
+templates:
+  - '{{ alertmanager_config_dir }}/templates/*.tmpl'
+
+route:
+  group_by: {{ alertmanager_route.group_by | to_json }}
+  group_wait: {{ alertmanager_route.group_wait }}
+  group_interval: {{ alertmanager_route.group_interval }}
+  repeat_interval: {{ alertmanager_route.repeat_interval }}
+  receiver: '{{ alertmanager_route.receiver }}'
+{% if alertmanager_route.routes is defined %}
+  routes:
+{% for route in alertmanager_route.routes %}
+    - match:
+{% for key, value in route.match.items() %}
+        {{ key }}: '{{ value }}'
+{% endfor %}
+      receiver: '{{ route.receiver }}'
+{% if route.continue is defined %}
+      continue: {{ route.continue | lower }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+receivers:
+{% for receiver in alertmanager_receivers %}
+  - name: '{{ receiver.name }}'
+{% if receiver.email_configs is defined %}
+    email_configs:
+{% for email in receiver.email_configs %}
+      - to: '{{ email.to }}'
+{% if email.send_resolved is defined %}
+        send_resolved: {{ email.send_resolved | lower }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if receiver.slack_configs is defined %}
+    slack_configs:
+{% for slack in receiver.slack_configs %}
+      - api_url: '{{ slack.api_url }}'
+        channel: '{{ slack.channel }}'
+{% if slack.send_resolved is defined %}
+        send_resolved: {{ slack.send_resolved | lower }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if receiver.webhook_configs is defined %}
+    webhook_configs:
+{% for webhook in receiver.webhook_configs %}
+      - url: '{{ webhook.url }}'
+{% if webhook.send_resolved is defined %}
+        send_resolved: {{ webhook.send_resolved | lower }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+{% if alertmanager_inhibit_rules | length > 0 %}
+inhibit_rules:
+{% for rule in alertmanager_inhibit_rules %}
+  - source_match:
+{% for key, value in rule.source_match.items() %}
+      {{ key }}: '{{ value }}'
+{% endfor %}
+    target_match:
+{% for key, value in rule.target_match.items() %}
+      {{ key }}: '{{ value }}'
+{% endfor %}
+{% if rule.equal is defined %}
+    equal: {{ rule.equal | to_json }}
+{% endif %}
+{% endfor %}
+{% endif %}

@@ -1,0 +1,51 @@
+---
+- name: Verify Windows Firewall Configuration
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Check Windows Firewall service status
+      ansible.windows.win_service:
+        name: MpsSvc
+      register: firewall_service
+
+    - name: Assert Windows Firewall service is running
+      ansible.builtin.assert:
+        that:
+          - firewall_service.exists
+          - firewall_service.state == 'running'
+        fail_msg: "Windows Firewall service is not running"
+        success_msg: "Windows Firewall service is running"
+
+    - name: Get firewall profile status
+      ansible.windows.win_powershell:
+        script: |
+          Get-NetFirewallProfile | Select-Object Name, Enabled | ConvertTo-Json
+      register: firewall_profiles
+
+    - name: Display firewall profiles
+      ansible.builtin.debug:
+        msg: "Firewall profiles: {{ firewall_profiles.output }}"
+
+    - name: Check if firewall rules exist
+      ansible.windows.win_powershell:
+        script: |
+          (Get-NetFirewallRule | Measure-Object).Count
+      register: firewall_rules_count
+
+    - name: Assert firewall rules exist
+      ansible.builtin.assert:
+        that:
+          - firewall_rules_count.output[0] | int > 0
+        fail_msg: "No firewall rules found"
+        success_msg: "Firewall rules exist ({{ firewall_rules_count.output[0] }} rules)"
+
+    - name: Check RDP port rule (if enabled)
+      ansible.windows.win_powershell:
+        script: |
+          Get-NetFirewallRule -DisplayName "*Remote Desktop*" -ErrorAction SilentlyContinue | Select-Object -First 1 | ConvertTo-Json
+      register: rdp_rule
+      ignore_errors: true
+
+    - name: Display RDP firewall rule status
+      ansible.builtin.debug:
+        msg: "RDP rule found: {{ rdp_rule.output | length > 0 }}"

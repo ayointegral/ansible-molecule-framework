@@ -1,0 +1,32 @@
+---
+galaxy_info:
+  role_name: disk_management
+  namespace: storage
+  author: Ansible Molecule Testing Framework
+  description: Manage disk partitions, filesystems, and mount points
+  license: MIT
+  min_ansible_version: "2.10"
+
+  platforms:
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+
+  galaxy_tags:
+    - disk
+    - storage
+    - filesystem
+    - partitions
+    - mount
+    - loopback
+
+dependencies: []

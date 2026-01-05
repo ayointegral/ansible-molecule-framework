@@ -1,0 +1,34 @@
+---
+# Master playbook - orchestrates all deployments
+# Usage: ansible-playbook playbooks/shared/site.yml -i inventories/<env>/<compartment>/hosts.yml
+
+- name: Site-wide deployment
+  hosts: all
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Display deployment information
+      ansible.builtin.debug:
+        msg: |
+          Starting site deployment
+          Environment: {{ env | default('unknown') }}
+          Inventory: {{ inventory_file }}
+          Date: {{ ansible_date_time.iso8601 }}
+
+  tasks:
+    - name: Include provisioning playbook
+      ansible.builtin.import_playbook: provision.yml
+      when: provision | default(false) | bool
+
+    - name: Include configuration playbook
+      ansible.builtin.import_playbook: configure.yml
+
+    - name: Include validation playbook
+      ansible.builtin.import_playbook: validate.yml
+      when: validate | default(true) | bool
+
+  post_tasks:
+    - name: Deployment summary
+      ansible.builtin.debug:
+        msg: "Site deployment completed successfully"

@@ -1,0 +1,41 @@
+---
+# IIS Web Server configuration
+iis_features:
+  - Web-Server
+  - Web-Common-Http
+  - Web-Default-Doc
+  - Web-Dir-Browsing
+  - Web-Http-Errors
+  - Web-Static-Content
+  - Web-Http-Logging
+  - Web-Request-Monitor
+  - Web-Filtering
+  - Web-Stat-Compression
+
+# Optional IIS features
+iis_optional_features:
+  - Web-Mgmt-Console
+  - Web-Mgmt-Service
+
+# Default website settings
+iis_default_site_enabled: true
+iis_default_site_path: "C:\\inetpub\\wwwroot"
+
+# Website configurations
+iis_sites:
+  - name: "Default Web Site"
+    path: "C:\\inetpub\\wwwroot"
+    port: 80
+    state: started
+
+# Application pool settings
+iis_app_pools:
+  - name: "DefaultAppPool"
+    state: started
+    attributes:
+      managedRuntimeVersion: "v4.0"
+      managedPipelineMode: "Integrated"
+
+# Service settings
+iis_service_state: started
+iis_service_start_mode: auto

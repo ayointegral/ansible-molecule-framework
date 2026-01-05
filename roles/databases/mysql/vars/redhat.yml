@@ -1,0 +1,7 @@
+---
+# RedHat/CentOS variables
+mysql_package_name: "{% if mysql_use_mariadb %}mariadb-server{% else %}mysql-server{% endif %}"
+mysql_service_name: "{% if mysql_use_mariadb %}mariadb{% else %}mysqld{% endif %}"
+mysql_python_package: python3-PyMySQL
+mysql_config_file: "/etc/my.cnf.d/mariadb-server.cnf"
+mysql_socket: "/var/lib/mysql/mysql.sock"

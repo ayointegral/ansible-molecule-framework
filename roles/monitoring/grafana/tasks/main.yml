@@ -1,0 +1,102 @@
+---
+# Grafana installation and configuration
+
+- name: Install dependencies
+  ansible.builtin.package:
+    name:
+      - apt-transport-https
+      - software-properties-common
+      - wget
+      - gnupg
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Add Grafana GPG key (Debian/Ubuntu)
+  ansible.builtin.apt_key:
+    url: https://apt.grafana.com/gpg.key
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Add Grafana repository (Debian/Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: "deb https://apt.grafana.com stable main"
+    state: present
+    filename: grafana
+  when: ansible_os_family == 'Debian'
+
+- name: Add Grafana repository (RedHat)
+  ansible.builtin.yum_repository:
+    name: grafana
+    description: Grafana Repository
+    baseurl: https://rpm.grafana.com
+    gpgcheck: true
+    gpgkey: https://rpm.grafana.com/gpg.key
+    enabled: true
+  when: ansible_os_family == 'RedHat'
+
+- name: Install Grafana
+  ansible.builtin.package:
+    name: grafana
+    state: present
+    update_cache: true
+
+- name: Create Grafana directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: grafana
+    group: grafana
+    mode: '0755'
+  loop:
+    - /etc/grafana
+    - /etc/grafana/provisioning
+    - /etc/grafana/provisioning/datasources
+    - /etc/grafana/provisioning/dashboards
+    - /etc/grafana/provisioning/notifiers
+    - /etc/grafana/provisioning/plugins
+    - "{{ grafana_dashboards_dir }}"
+
+- name: Configure Grafana
+  ansible.builtin.template:
+    src: grafana.ini.j2
+    dest: /etc/grafana/grafana.ini
+    owner: root
+    group: grafana
+    mode: '0640'
+  notify: Restart grafana
+
+- name: Configure Grafana datasources
+  ansible.builtin.template:
+    src: datasources.yml.j2
+    dest: /etc/grafana/provisioning/datasources/datasources.yml
+    owner: root
+    group: grafana
+    mode: '0640'
+  when: grafana_datasources | length > 0
+  notify: Restart grafana
+
+- name: Configure Grafana dashboard provisioning
+  ansible.builtin.template:
+    src: dashboards.yml.j2
+    dest: /etc/grafana/provisioning/dashboards/dashboards.yml
+    owner: root
+    group: grafana
+    mode: '0640'
+  notify: Restart grafana
+
+- name: Install Grafana plugins
+  ansible.builtin.command:
+    cmd: "grafana-cli plugins install {{ item }}"
+  loop: "{{ grafana_plugins }}"
+  when: grafana_plugins | length > 0
+  register: plugin_install
+  changed_when: "'Installed' in plugin_install.stdout"
+  failed_when: plugin_install.rc != 0 and 'already installed' not in plugin_install.stderr
+  notify: Restart grafana
+
+- name: Start and enable Grafana service
+  ansible.builtin.systemd:
+    name: grafana-server
+    state: "{{ grafana_service_state }}"
+    enabled: "{{ grafana_service_enabled }}"
+    daemon_reload: true

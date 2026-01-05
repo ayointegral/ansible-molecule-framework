@@ -1,0 +1,51 @@
+# {{ ansible_managed }}
+# Container storage configuration for Podman
+# See containers-storage.conf(5) for more information
+
+[storage]
+# Default storage driver
+driver = "{{ podman_storage_driver }}"
+
+# Primary storage location for layers and images
+graphroot = "{{ podman_storage_graphroot }}"
+
+# Temporary storage location for running containers
+runroot = "{{ podman_storage_runroot }}"
+
+{% if podman_configure_rootless | bool %}
+# Rootless storage configuration
+# This is used when Podman is run as non-root
+[storage.options]
+# Path for rootless users (variables like $HOME are expanded)
+rootless_storage_path = "{{ podman_rootless_storage_path }}"
+{% endif %}
+
+{% if podman_storage_driver == 'overlay' %}
+# Overlay driver specific options
+[storage.options.overlay]
+{% if podman_storage_options.overlay.mount_program is defined %}
+# Mount program for overlay (required for rootless on some systems)
+mount_program = "{{ podman_storage_options.overlay.mount_program }}"
+{% endif %}
+{% if podman_storage_options.overlay.mountopt is defined %}
+# Mount options for overlay filesystem
+mountopt = "{{ podman_storage_options.overlay.mountopt }}"
+{% endif %}
+# Ignore chown errors for rootless containers
+ignore_chown_errors = "true"
+{% endif %}
+
+{% if podman_storage_driver == 'vfs' %}
+# VFS driver options (no special configuration needed)
+[storage.options.vfs]
+{% endif %}
+
+{% if podman_storage_driver == 'btrfs' %}
+# BTRFS driver options
+[storage.options.btrfs]
+{% endif %}
+
+{% if podman_storage_driver == 'zfs' %}
+# ZFS driver options
+[storage.options.zfs]
+{% endif %}

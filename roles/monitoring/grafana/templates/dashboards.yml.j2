@@ -1,0 +1,15 @@
+# Grafana Dashboard Provisioning
+# Managed by Ansible
+
+apiVersion: 1
+
+providers:
+  - name: 'default'
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    editable: true
+    updateIntervalSeconds: 10
+    options:
+      path: {{ grafana_dashboards_dir }}

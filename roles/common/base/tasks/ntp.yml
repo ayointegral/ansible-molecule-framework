@@ -1,0 +1,23 @@
+---
+# NTP Configuration tasks
+
+- name: Install NTP package
+  ansible.builtin.package:
+    name: "{{ base_ntp_package }}"
+    state: present
+
+- name: Configure NTP/chrony
+  ansible.builtin.template:
+    src: "{{ base_ntp_config_template }}"
+    dest: "{{ base_ntp_config_path }}"
+    owner: root
+    group: root
+    mode: '0644'
+    backup: true
+  notify: Restart ntp service
+
+- name: Ensure NTP service is enabled and started
+  ansible.builtin.service:
+    name: "{{ base_ntp_service }}"
+    state: started
+    enabled: true

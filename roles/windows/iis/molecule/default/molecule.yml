@@ -1,0 +1,87 @@
+---
+# Multi-architecture Windows testing with Vagrant
+# Supports both x86_64 (VirtualBox) and ARM64 (QEMU/Parallels)
+#
+# For ARM64 users: Use molecule test -s qemu or -s delegated
+# For x86_64 users: This default scenario works with VirtualBox
+
+dependency:
+  name: galaxy
+  options:
+    requirements-file: requirements.yml
+
+driver:
+  name: vagrant
+  provider:
+    name: virtualbox
+
+platforms:
+  - name: windows-2019
+    box: gusztavvargadr/windows-server-2019-standard
+    memory: 4096
+    cpus: 2
+    groups:
+      - windows
+    instance_raw_config_args:
+      - "vm.guest = :windows"
+      - "vm.communicator = 'winrm'"
+      - "winrm.username = 'vagrant'"
+      - "winrm.password = 'vagrant'"
+      - "vm.boot_timeout = 600"
+      - "winrm.timeout = 300"
+      - "winrm.retry_limit = 10"
+    provider_raw_config_args:
+      - "memory = 4096"
+      - "cpus = 2"
+
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ALLOW_BROKEN_CONDITIONALS: "true"
+  connection_options:
+    ansible_connection: winrm
+    ansible_winrm_transport: ntlm
+    ansible_winrm_server_cert_validation: ignore
+    ansible_port: 5985
+    ansible_user: vagrant
+    ansible_password: vagrant
+  config_options:
+    defaults:
+      callbacks_enabled: profile_tasks
+
+verifier:
+  name: ansible
+
+scenario:
+  name: default
+  test_sequence:
+    - dependency
+    - cleanup
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - idempotence
+    - verify
+    - cleanup
+    - destroy
+
+# =============================================================================
+# SCENARIO SELECTION GUIDE
+# =============================================================================
+#
+# Available scenarios:
+#   default   - VirtualBox (x86_64 only)
+#   qemu      - QEMU emulation (ARM64, slow)
+#   delegated - Remote Windows host (any architecture, fastest)
+#
+# x86_64 (Intel/AMD):
+#   molecule test                    # Uses VirtualBox
+#
+# ARM64 (Apple Silicon):
+#   molecule test -s qemu            # QEMU x86 emulation (slow)
+#   molecule test -s delegated       # Remote Windows host (fast)
+#
+# First run downloads ~6GB Windows box image.
+# =============================================================================

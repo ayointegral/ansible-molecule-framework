@@ -1,0 +1,25 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Check fake-gcs-server binary exists
+      ansible.builtin.stat:
+        path: /usr/local/bin/fake-gcs-server
+      register: gcs_bin
+
+    - name: Assert fake-gcs-server binary exists
+      ansible.builtin.assert:
+        that: gcs_bin.stat.exists
+        fail_msg: "fake-gcs-server binary not found"
+
+    - name: Check fake-gcs data directory exists
+      ansible.builtin.stat:
+        path: /var/lib/fake-gcs
+      register: gcs_data
+
+    - name: Assert fake-gcs data directory exists
+      ansible.builtin.assert:
+        that: gcs_data.stat.exists and gcs_data.stat.isdir
+        fail_msg: "fake-gcs data directory not found"

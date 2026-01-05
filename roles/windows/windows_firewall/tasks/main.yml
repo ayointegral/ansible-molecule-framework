@@ -1,0 +1,53 @@
+---
+# Windows Firewall configuration
+# Requires Windows Server with Ansible WinRM configured
+
+- name: Ensure Windows Firewall service is running
+  ansible.windows.win_service:
+    name: MpsSvc
+    state: started
+    start_mode: auto
+
+- name: Set Windows Firewall state for each profile
+  community.windows.win_firewall:
+    profiles: "{{ windows_firewall_profiles }}"
+    state: "{{ windows_firewall_state }}"
+
+- name: Configure firewall default actions
+  ansible.windows.win_powershell:
+    script: |
+      Set-NetFirewallProfile -Profile {{ item }} -DefaultInboundAction {{ windows_firewall_default_inbound_action }} -DefaultOutboundAction {{ windows_firewall_default_outbound_action }}
+  loop: "{{ windows_firewall_profiles }}"
+  changed_when: false
+
+- name: Create firewall rules
+  community.windows.win_firewall_rule:
+    name: "{{ item.name }}"
+    direction: "{{ item.direction | default('In') }}"
+    action: "{{ item.action | default('Allow') }}"
+    protocol: "{{ item.protocol | default('TCP') }}"
+    localport: "{{ item.localport | default(omit) }}"
+    remoteip: "{{ item.remoteip | default(omit) }}"
+    program: "{{ item.program | default(omit) }}"
+    enabled: "{{ item.enabled | default(true) }}"
+    state: present
+  loop: "{{ windows_firewall_rules }}"
+
+- name: Remove unwanted firewall rules
+  community.windows.win_firewall_rule:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ windows_firewall_rules_remove }}"
+  when: windows_firewall_rules_remove | length > 0
+
+- name: Configure firewall logging
+  ansible.windows.win_powershell:
+    script: |
+      Set-NetFirewallProfile -Profile {{ item }} `
+        -LogFileName "{{ windows_firewall_log_path }}" `
+        -LogMaxSizeKilobytes {{ windows_firewall_log_max_size }} `
+        -LogBlocked {{ windows_firewall_log_dropped | ternary('True', 'False') }} `
+        -LogAllowed {{ windows_firewall_log_allowed | ternary('True', 'False') }}
+  loop: "{{ windows_firewall_profiles }}"
+  when: windows_firewall_logging_enabled
+  changed_when: false

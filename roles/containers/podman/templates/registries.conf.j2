@@ -1,0 +1,40 @@
+# {{ ansible_managed }}
+# Container registries configuration for Podman
+# See containers-registries.conf(5) for more information
+
+# Unqualified-search registries
+# When an image name doesn't include a registry, Podman searches these registries in order
+unqualified-search-registries = {{ podman_unqualified_search_registries | to_json }}
+
+{% if podman_registries.search is defined and podman_registries.search | length > 0 %}
+# Search registries
+{% for registry in podman_registries.search %}
+[[registry]]
+location = "{{ registry }}"
+
+{% endfor %}
+{% endif %}
+
+{% if podman_registries.insecure is defined and podman_registries.insecure | length > 0 %}
+# Insecure registries (HTTP or untrusted HTTPS)
+{% for registry in podman_registries.insecure %}
+[[registry]]
+location = "{{ registry }}"
+insecure = true
+
+{% endfor %}
+{% endif %}
+
+{% if podman_registries.blocked is defined and podman_registries.blocked | length > 0 %}
+# Blocked registries
+{% for registry in podman_registries.blocked %}
+[[registry]]
+location = "{{ registry }}"
+blocked = true
+
+{% endfor %}
+{% endif %}
+
+# Short name mode - enforcing requires fully qualified names
+# Options: enforcing, permissive, disabled
+short-name-mode = "permissive"

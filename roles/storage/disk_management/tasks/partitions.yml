@@ -1,0 +1,46 @@
+---
+# tasks/partitions.yml - Partition management
+
+- name: Install parted package
+  ansible.builtin.package:
+    name: parted
+    state: present
+  become: true
+
+- name: Read existing partition tables
+  community.general.parted:
+    device: "{{ item.device }}"
+    state: info
+  loop: "{{ disk_management_disks }}"
+  loop_control:
+    label: "{{ item.device }}"
+  register: disk_info
+  become: true
+
+- name: Create partition table on disks
+  community.general.parted:
+    device: "{{ item.device }}"
+    label: "{{ disk_management_partition_table }}"
+    state: present
+  loop: "{{ disk_management_disks }}"
+  loop_control:
+    label: "{{ item.device }}"
+  become: true
+  when: >
+    disk_management_force_partitions or
+    (disk_info.results | selectattr('item.device', 'equalto', item.device) | first).disk.table is none
+
+- name: Create partitions
+  community.general.parted:
+    device: "{{ item.0.device }}"
+    number: "{{ item.1.number }}"
+    part_start: "{{ item.1.start | default('0%') }}"
+    part_end: "{{ item.1.end | default('100%') }}"
+    state: present
+    fs_type: "{{ item.1.filesystem | default(disk_management_default_filesystem) }}"
+  loop: "{{ disk_management_disks | subelements('partitions', skip_missing=True) }}"
+  loop_control:
+    label: "{{ item.0.device }}{{ item.1.number }}"
+  become: true
+  register: partition_results
+  notify: Reload partition table

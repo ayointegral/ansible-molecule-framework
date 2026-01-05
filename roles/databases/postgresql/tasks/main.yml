@@ -1,0 +1,70 @@
+---
+# Main tasks for postgresql role
+
+- name: Include OS-specific variables
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+    - default.yml
+  tags:
+    - postgresql
+
+- name: Include installation tasks
+  ansible.builtin.include_tasks: install.yml
+  tags:
+    - postgresql
+    - postgresql-install
+
+- name: Include configuration tasks
+  ansible.builtin.include_tasks: configure.yml
+  tags:
+    - postgresql
+    - postgresql-configure
+
+# Flush handlers to apply any config changes, then ensure service is running
+# This is critical for idempotence - on second run, handlers won't fire but
+# we still need PostgreSQL running before database/user operations
+- name: Flush handlers to apply configuration changes
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure PostgreSQL is running before database operations
+  ansible.builtin.service:
+    name: postgresql
+    state: started
+  tags:
+    - postgresql
+    - postgresql-service
+
+- name: Wait for PostgreSQL to be ready (socket available)
+  ansible.builtin.wait_for:
+    path: /var/run/postgresql/.s.PGSQL.5432
+    state: present
+    timeout: 30
+  tags:
+    - postgresql
+    - postgresql-service
+
+- name: Include database creation tasks
+  ansible.builtin.include_tasks: databases.yml
+  when: postgresql_databases | length > 0
+  tags:
+    - postgresql
+    - postgresql-databases
+
+- name: Include user creation tasks
+  ansible.builtin.include_tasks: users.yml
+  when: postgresql_users | length > 0
+  tags:
+    - postgresql
+    - postgresql-users
+
+- name: Ensure PostgreSQL service is in desired state
+  ansible.builtin.service:
+    name: postgresql
+    state: "{{ postgresql_service_state }}"
+    enabled: "{{ postgresql_service_enabled }}"
+  tags:
+    - postgresql
+    - postgresql-service

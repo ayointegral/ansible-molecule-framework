@@ -1,0 +1,101 @@
+---
+# common/base - Default variables
+
+# Hostname configuration
+base_set_hostname: true
+base_hostname: "{{ inventory_hostname }}"
+
+# Hosts file management
+base_manage_hosts_file: true
+base_hosts_entries: []
+
+# Timezone
+base_timezone: UTC
+
+# Locales (Debian/Ubuntu only)
+base_locales:
+  - en_US.UTF-8
+
+# Essential directories to create
+base_directories:
+  - path: /opt/ansible
+    owner: root
+    group: root
+    mode: '0755'
+  - path: /var/log/ansible
+    owner: root
+    group: root
+    mode: '0755'
+
+# Base packages to install on all systems
+base_packages:
+  - vim
+  - curl
+  - wget
+  - tar
+  - gzip
+  - unzip
+  - sudo
+  - ca-certificates
+
+# Sysctl parameters for performance and security
+base_sysctl_params:
+  - name: net.ipv4.ip_forward
+    value: "0"
+  - name: net.ipv4.conf.all.send_redirects
+    value: "0"
+  - name: net.ipv4.conf.default.send_redirects
+    value: "0"
+  - name: net.ipv4.conf.all.accept_source_route
+    value: "0"
+  - name: net.ipv4.conf.default.accept_source_route
+    value: "0"
+  - name: net.ipv4.conf.all.accept_redirects
+    value: "0"
+  - name: net.ipv4.conf.default.accept_redirects
+    value: "0"
+  - name: net.ipv4.conf.all.log_martians
+    value: "1"
+  - name: net.ipv4.conf.default.log_martians
+    value: "1"
+  - name: kernel.randomize_va_space
+    value: "2"
+
+# Resource limits
+base_limits:
+  - domain: '*'
+    type: soft
+    item: nofile
+    value: 65535
+  - domain: '*'
+    type: hard
+    item: nofile
+    value: 65535
+  - domain: '*'
+    type: soft
+    item: nproc
+    value: 65535
+  - domain: '*'
+    type: hard
+    item: nproc
+    value: 65535
+
+# NTP Configuration
+base_configure_ntp: true
+base_ntp_servers:
+  - 0.pool.ntp.org
+  - 1.pool.ntp.org
+  - 2.pool.ntp.org
+  - 3.pool.ntp.org
+
+# SSH Configuration
+base_configure_ssh: true
+base_manage_sshd_config: true
+base_ssh_port: 22
+base_ssh_permit_root_login: "no"
+base_ssh_password_auth: "no"
+base_ssh_pubkey_auth: "yes"
+base_ssh_x11_forwarding: "no"
+base_ssh_max_auth_tries: 3
+base_ssh_client_alive_interval: 300
+base_ssh_client_alive_count_max: 2

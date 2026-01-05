@@ -1,0 +1,5 @@
+---
+# requirements.yml for postgresql molecule test
+collections:
+  - name: community.postgresql
+    version: ">=3.0.0"

@@ -1,0 +1,26 @@
+# Grafana Datasources Provisioning
+# Managed by Ansible
+
+apiVersion: 1
+
+datasources:
+{% for ds in grafana_datasources %}
+  - name: {{ ds.name }}
+    type: {{ ds.type }}
+    access: {{ ds.access | default('proxy') }}
+    url: {{ ds.url }}
+    isDefault: {{ ds.is_default | default(false) | lower }}
+    editable: {{ ds.editable | default(true) | lower }}
+{% if ds.basic_auth | default(false) %}
+    basicAuth: true
+    basicAuthUser: {{ ds.basic_auth_user | default('') }}
+    secureJsonData:
+      basicAuthPassword: {{ ds.basic_auth_password | default('') }}
+{% endif %}
+{% if ds.json_data is defined %}
+    jsonData:
+{% for key, value in ds.json_data.items() %}
+      {{ key }}: {{ value }}
+{% endfor %}
+{% endif %}
+{% endfor %}

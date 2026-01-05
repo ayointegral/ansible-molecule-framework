@@ -1,0 +1,56 @@
+# Grafana configuration
+# Managed by Ansible
+
+[paths]
+data = /var/lib/grafana
+logs = /var/log/grafana
+plugins = /var/lib/grafana/plugins
+provisioning = /etc/grafana/provisioning
+
+[server]
+protocol = {{ grafana_protocol }}
+http_addr = {{ grafana_bind_address }}
+http_port = {{ grafana_port }}
+domain = {{ grafana_domain }}
+root_url = {{ grafana_root_url }}
+
+[database]
+type = {{ grafana_database_type }}
+{% if grafana_database_type == 'sqlite3' %}
+path = {{ grafana_database_path }}
+{% endif %}
+
+[security]
+admin_user = {{ grafana_admin_user }}
+admin_password = {{ grafana_admin_password }}
+secret_key = {{ grafana_secret_key }}
+disable_gravatar = {{ grafana_disable_gravatar | lower }}
+allow_embedding = {{ grafana_allow_embedding | lower }}
+
+[users]
+allow_sign_up = false
+
+[auth.anonymous]
+enabled = {{ grafana_anonymous_enabled | lower }}
+{% if grafana_anonymous_enabled %}
+org_name = {{ grafana_anonymous_org_name }}
+org_role = {{ grafana_anonymous_org_role }}
+{% endif %}
+
+[auth]
+disable_login_form = {{ grafana_disable_login_form | lower }}
+disable_signout_menu = {{ grafana_disable_signout_menu | lower }}
+
+[log]
+mode = {{ grafana_log_mode }}
+level = {{ grafana_log_level }}
+
+[log.console]
+level = {{ grafana_log_level }}
+
+[log.file]
+level = {{ grafana_log_level }}
+
+[analytics]
+reporting_enabled = false
+check_for_updates = true

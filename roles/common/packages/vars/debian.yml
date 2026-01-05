@@ -1,0 +1,14 @@
+---
+# Debian/Ubuntu specific variables
+
+# Essential packages for Debian-based systems
+packages_os_essential:
+  - apt-transport-https
+  - ca-certificates
+  - gnupg
+  - software-properties-common
+  - curl
+  - wget
+
+# Package manager command
+packages_manager: apt

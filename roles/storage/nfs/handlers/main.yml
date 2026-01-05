@@ -1,0 +1,20 @@
+---
+# handlers/main.yml - NFS handlers
+
+- name: Reload NFS exports
+  ansible.builtin.command: exportfs -ra
+  become: true
+  failed_when: false  # May fail in containers due to filesystem limitations
+
+- name: Restart nfs-idmapd
+  ansible.builtin.service:
+    name: nfs-idmapd
+    state: restarted
+  become: true
+  failed_when: false
+
+- name: Restart NFS server
+  ansible.builtin.service:
+    name: "{{ _nfs_server_service }}"
+    state: restarted
+  become: true

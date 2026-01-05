@@ -1,0 +1,137 @@
+---
+# defaults/main.yml - Default variables for HAProxy role
+
+# Package management
+haproxy_package_state: present
+
+# Service management
+haproxy_service_state: started
+haproxy_service_enabled: true
+
+# User and group
+haproxy_user: haproxy
+haproxy_group: haproxy
+
+# Global settings
+haproxy_global:
+  log:
+    - "/dev/log local0"
+    - "/dev/log local1 notice"
+  chroot: /var/lib/haproxy
+  stats_socket: /var/lib/haproxy/stats mode 660 level admin expose-fd listeners
+  stats_timeout: 30s
+  user: "{{ haproxy_user }}"
+  group: "{{ haproxy_group }}"
+  daemon: true
+  maxconn: 4096
+  # SSL/TLS settings
+  ssl_default_bind_ciphers: "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384"
+  ssl_default_bind_ciphersuites: "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256"
+  ssl_default_bind_options: "no-sslv3 no-tlsv10 no-tlsv11"
+  ssl_default_server_ciphers: "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384"
+  ssl_default_server_ciphersuites: "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256"
+  ssl_default_server_options: "no-sslv3 no-tlsv10 no-tlsv11"
+  tune_ssl_default_dh_param: 2048
+
+# Defaults section settings
+haproxy_defaults:
+  mode: http
+  log: global
+  option:
+    - httplog
+    - dontlognull
+    - http-server-close
+    - forwardfor except 127.0.0.0/8
+    - redispatch
+  retries: 3
+  timeout:
+    - connect 5000
+    - client 50000
+    - server 50000
+    - http-request 10000
+    - http-keep-alive 10000
+    - queue 60000
+    - tunnel 3600000
+  errorfile:
+    - "400 /etc/haproxy/errors/400.http"
+    - "403 /etc/haproxy/errors/403.http"
+    - "408 /etc/haproxy/errors/408.http"
+    - "500 /etc/haproxy/errors/500.http"
+    - "502 /etc/haproxy/errors/502.http"
+    - "503 /etc/haproxy/errors/503.http"
+    - "504 /etc/haproxy/errors/504.http"
+
+# Frontend configurations
+haproxy_frontends:
+  - name: http_front
+    bind: "*:80"
+    mode: http
+    default_backend: http_back
+    options:
+      - httplog
+    acls: []
+    use_backends: []
+    extra_config: []
+
+# Backend configurations
+haproxy_backends:
+  - name: http_back
+    mode: http
+    balance: roundrobin
+    options:
+      - httpchk GET /health
+      - httplog
+    http_check_expect: "status 200"
+    servers:
+      - name: web1
+        address: "127.0.0.1:8080"
+        params: "check inter 2000 rise 2 fall 3"
+
+# Listen sections (combined frontend/backend)
+haproxy_listens: []
+# Example:
+#   - name: mysql_cluster
+#     bind: "*:3306"
+#     mode: tcp
+#     balance: roundrobin
+#     options:
+#       - mysql-check user haproxy
+#     servers:
+#       - name: mysql1
+#         address: "10.0.0.1:3306"
+#         params: "check"
+
+# Stats page configuration
+haproxy_stats_enabled: true
+haproxy_stats:
+  bind: "*:8404"
+  uri: /stats
+  realm: "HAProxy Statistics"
+  auth: "admin:admin"
+  refresh: 30s
+  admin: "if LOCALHOST"
+
+# SSL certificates
+haproxy_ssl_certificates: []
+# Example:
+#   - name: example.com
+#     content: |
+#       -----BEGIN CERTIFICATE-----
+#       ...
+#       -----END CERTIFICATE-----
+#       -----BEGIN PRIVATE KEY-----
+#       ...
+#       -----END PRIVATE KEY-----
+
+# Sysctl settings for HAProxy performance
+haproxy_sysctl_settings:
+  - name: net.ipv4.ip_nonlocal_bind
+    value: "1"
+  - name: net.ipv4.tcp_tw_reuse
+    value: "1"
+
+# Extra global configuration lines
+haproxy_global_extra: []
+
+# Extra defaults configuration lines
+haproxy_defaults_extra: []

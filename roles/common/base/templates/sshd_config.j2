@@ -1,0 +1,59 @@
+# {{ ansible_managed }}
+# OpenSSH Server Configuration
+
+Port {{ base_ssh_port }}
+AddressFamily any
+ListenAddress 0.0.0.0
+ListenAddress ::
+
+# Logging
+SyslogFacility AUTH
+LogLevel INFO
+
+# Authentication
+LoginGraceTime 60
+PermitRootLogin {{ base_ssh_permit_root_login }}
+StrictModes yes
+MaxAuthTries {{ base_ssh_max_auth_tries }}
+MaxSessions 10
+
+PubkeyAuthentication {{ base_ssh_pubkey_auth }}
+AuthorizedKeysFile .ssh/authorized_keys
+
+PasswordAuthentication {{ base_ssh_password_auth }}
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+
+# Kerberos options
+KerberosAuthentication no
+KerberosOrLocalPasswd no
+KerberosTicketCleanup yes
+
+# GSSAPI options
+GSSAPIAuthentication no
+GSSAPICleanupCredentials yes
+
+UsePAM yes
+
+AllowAgentForwarding yes
+AllowTcpForwarding yes
+GatewayPorts no
+X11Forwarding {{ base_ssh_x11_forwarding }}
+X11DisplayOffset 10
+PrintMotd no
+PrintLastLog yes
+TCPKeepAlive yes
+PermitUserEnvironment no
+
+# Connection timeout settings
+ClientAliveInterval {{ base_ssh_client_alive_interval }}
+ClientAliveCountMax {{ base_ssh_client_alive_count_max }}
+
+Compression delayed
+UseDNS no
+
+# Accept locale-related environment variables
+AcceptEnv LANG LC_*
+
+# Subsystem for SFTP
+Subsystem sftp /usr/lib/openssh/sftp-server

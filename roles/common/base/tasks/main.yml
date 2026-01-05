@@ -1,0 +1,116 @@
+---
+# common/base - Main tasks
+# Base system configuration for all hosts
+
+- name: Include OS-specific variables
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+    - "default.yml"
+  tags:
+    - base
+    - always
+
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ base_hostname | default(inventory_hostname) }}"
+  when: base_set_hostname | default(true)
+  tags:
+    - base
+    - hostname
+
+- name: Configure /etc/hosts
+  ansible.builtin.template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: '0644'
+    backup: true
+  when: base_manage_hosts_file | default(true)
+  tags:
+    - base
+    - hosts
+
+- name: Set timezone
+  community.general.timezone:
+    name: "{{ base_timezone }}"
+  when: base_timezone is defined
+  tags:
+    - base
+    - timezone
+
+- name: Configure locale
+  ansible.builtin.locale_gen:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ base_locales }}"
+  when:
+    - base_locales is defined
+    - ansible_os_family == 'Debian'
+  tags:
+    - base
+    - locale
+
+- name: Ensure essential directories exist
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0755') }}"
+  loop: "{{ base_directories }}"
+  when: base_directories is defined
+  tags:
+    - base
+    - directories
+
+- name: Configure sysctl parameters
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: true
+    sysctl_file: /etc/sysctl.d/99-ansible-base.conf
+  loop: "{{ base_sysctl_params }}"
+  when: base_sysctl_params is defined
+  tags:
+    - base
+    - sysctl
+
+- name: Configure resource limits
+  ansible.builtin.template:
+    src: limits.conf.j2
+    dest: /etc/security/limits.d/99-ansible-base.conf
+    owner: root
+    group: root
+    mode: '0644'
+  when: base_limits is defined
+  tags:
+    - base
+    - limits
+
+- name: Ensure base packages are installed
+  ansible.builtin.package:
+    name: "{{ base_packages }}"
+    state: present
+  when: base_packages | length > 0
+  tags:
+    - base
+    - packages
+
+- name: Configure NTP/chrony
+  ansible.builtin.include_tasks: ntp.yml
+  when: base_configure_ntp | default(true)
+  tags:
+    - base
+    - ntp
+
+- name: Configure SSH server
+  ansible.builtin.include_tasks: ssh.yml
+  when: base_configure_ssh | default(true)
+  tags:
+    - base
+    - ssh

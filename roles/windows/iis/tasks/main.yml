@@ -1,0 +1,56 @@
+---
+# IIS Web Server Installation and Configuration
+# Requires Windows Server with Ansible WinRM configured
+
+- name: Install IIS Web Server feature
+  ansible.windows.win_feature:
+    name: "{{ iis_features }}"
+    state: present
+    include_management_tools: true
+  register: iis_install
+  notify: Restart IIS
+
+- name: Install optional IIS features
+  ansible.windows.win_feature:
+    name: "{{ iis_optional_features }}"
+    state: present
+  when: iis_optional_features | length > 0
+  notify: Restart IIS
+
+- name: Ensure IIS service is running
+  ansible.windows.win_service:
+    name: W3SVC
+    state: "{{ iis_service_state }}"
+    start_mode: "{{ iis_service_start_mode }}"
+
+- name: Create website directories
+  ansible.windows.win_file:
+    path: "{{ item.path }}"
+    state: directory
+  loop: "{{ iis_sites }}"
+
+- name: Configure IIS application pools
+  community.windows.win_iis_webapppool:
+    name: "{{ item.name }}"
+    state: "{{ item.state | default('started') }}"
+    attributes: "{{ item.attributes | default({}) }}"
+  loop: "{{ iis_app_pools }}"
+
+- name: Configure IIS websites
+  community.windows.win_iis_website:
+    name: "{{ item.name }}"
+    physical_path: "{{ item.path }}"
+    port: "{{ item.port | default(80) }}"
+    state: "{{ item.state | default('started') }}"
+  loop: "{{ iis_sites }}"
+
+- name: Create default index.html
+  ansible.windows.win_copy:
+    content: |
+      <!DOCTYPE html>
+      <html>
+      <head><title>IIS Test Page</title></head>
+      <body><h1>IIS is working!</h1></body>
+      </html>
+    dest: "{{ iis_default_site_path }}\\index.html"
+  when: iis_default_site_enabled

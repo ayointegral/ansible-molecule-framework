@@ -1,0 +1,56 @@
+# {{ ansible_managed }}
+# Main nginx configuration
+
+user {{ nginx_user }};
+worker_processes {{ nginx_worker_processes }};
+pid {{ nginx_pid_file }};
+error_log {{ nginx_error_log }} {{ nginx_error_log_level }};
+
+events {
+    worker_connections {{ nginx_worker_connections }};
+    multi_accept {{ nginx_multi_accept }};
+}
+
+http {
+    # Basic Settings
+    sendfile {{ nginx_sendfile }};
+    tcp_nopush {{ nginx_tcp_nopush }};
+    tcp_nodelay {{ nginx_tcp_nodelay }};
+    keepalive_timeout {{ nginx_keepalive_timeout }};
+    types_hash_max_size {{ nginx_types_hash_max_size }};
+    server_tokens {{ nginx_server_tokens }};
+    client_max_body_size {{ nginx_client_max_body_size }};
+
+    # MIME Types
+    include {{ nginx_conf_dir }}/mime.types;
+    default_type application/octet-stream;
+
+    # Logging Settings
+    log_format main {{ nginx_log_format }};
+    access_log {{ nginx_access_log }} main;
+
+    # Gzip Settings
+{% if nginx_gzip == 'on' %}
+    gzip {{ nginx_gzip }};
+    gzip_vary {{ nginx_gzip_vary }};
+    gzip_proxied {{ nginx_gzip_proxied }};
+    gzip_comp_level {{ nginx_gzip_comp_level }};
+    gzip_types {{ nginx_gzip_types | join(' ') }};
+{% endif %}
+
+{% if nginx_ssl_enabled %}
+    # SSL Settings
+    ssl_protocols {{ nginx_ssl_protocols }};
+    ssl_ciphers {{ nginx_ssl_ciphers }};
+    ssl_prefer_server_ciphers {{ nginx_ssl_prefer_server_ciphers }};
+    ssl_session_cache {{ nginx_ssl_session_cache }};
+    ssl_session_timeout {{ nginx_ssl_session_timeout }};
+    ssl_session_tickets {{ nginx_ssl_session_tickets }};
+{% endif %}
+
+    # Virtual Host Configs
+{% if ansible_os_family == 'Debian' %}
+    include {{ nginx_vhost_enabled_dir }}/*;
+{% endif %}
+    include {{ nginx_conf_d_dir }}/*.conf;
+}

@@ -1,0 +1,86 @@
+---
+# MySQL/MariaDB installation and configuration
+
+- name: Include OS-specific variables
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_os_family | lower }}.yml"
+    - "debian.yml"
+
+- name: Install MySQL/MariaDB packages
+  ansible.builtin.package:
+    name:
+      - "{{ mysql_package_name }}"
+      - "{{ mysql_python_package }}"
+    state: present
+
+- name: Ensure MySQL data directory exists
+  ansible.builtin.file:
+    path: "{{ mysql_datadir }}"
+    state: directory
+    owner: mysql
+    group: mysql
+    mode: '0755'
+
+- name: Start MySQL service for initial setup
+  ansible.builtin.service:
+    name: "{{ mysql_service_name }}"
+    state: started
+    enabled: "{{ mysql_service_enabled }}"
+
+- name: Wait for MySQL to be ready
+  ansible.builtin.wait_for:
+    path: "{{ mysql_socket }}"
+    state: present
+    timeout: 30
+
+- name: Set MySQL root password
+  community.mysql.mysql_user:
+    name: root
+    password: "{{ mysql_root_password }}"
+    host_all: true
+    login_unix_socket: "{{ mysql_socket }}"
+    state: present
+  ignore_errors: true
+  no_log: true
+
+- name: Create MySQL databases
+  community.mysql.mysql_db:
+    name: "{{ item.name }}"
+    encoding: "{{ item.encoding | default(mysql_character_set) }}"
+    collation: "{{ item.collation | default(mysql_collation) }}"
+    login_unix_socket: "{{ mysql_socket }}"
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    state: present
+  loop: "{{ mysql_databases }}"
+  when: mysql_databases | length > 0
+
+- name: Create MySQL users
+  community.mysql.mysql_user:
+    name: "{{ item.name }}"
+    host: "{{ item.host | default('localhost') }}"
+    password: "{{ item.password }}"
+    priv: "{{ item.priv }}"
+    login_unix_socket: "{{ mysql_socket }}"
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    state: present
+  loop: "{{ mysql_users }}"
+  when: mysql_users | length > 0
+  no_log: true
+
+- name: Configure MySQL
+  ansible.builtin.template:
+    src: mysqld.cnf.j2
+    dest: "{{ mysql_config_file }}"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart mysql
+
+- name: Ensure MySQL service is in desired state
+  ansible.builtin.service:
+    name: "{{ mysql_service_name }}"
+    state: "{{ mysql_service_state }}"
+    enabled: "{{ mysql_service_enabled }}"

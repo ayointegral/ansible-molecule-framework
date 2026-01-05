@@ -1,0 +1,47 @@
+---
+# RedHat/CentOS installation tasks for Podman
+
+- name: Install Podman (RHEL 8+/CentOS 8+/Fedora)
+  ansible.builtin.dnf:
+    name: podman
+    state: present
+  when: ansible_distribution_major_version | int >= 8
+
+- name: Install Podman (RHEL 7/CentOS 7)
+  when: ansible_distribution_major_version | int < 8
+  block:
+    - name: Enable extras repository for CentOS 7
+      ansible.builtin.yum:
+        name: centos-release-extras
+        state: present
+      when: ansible_distribution == 'CentOS'
+      failed_when: false
+
+    - name: Install Podman via yum
+      ansible.builtin.yum:
+        name: podman
+        state: present
+
+- name: Install additional Podman packages (dnf)
+  ansible.builtin.dnf:
+    name: "{{ podman_additional_packages }}"
+    state: present
+  when:
+    - podman_additional_packages | length > 0
+    - ansible_distribution_major_version | int >= 8
+
+- name: Install additional Podman packages (yum)
+  ansible.builtin.yum:
+    name: "{{ podman_additional_packages }}"
+    state: present
+  when:
+    - podman_additional_packages | length > 0
+    - ansible_distribution_major_version | int < 8
+
+- name: Install podman-compose
+  ansible.builtin.dnf:
+    name: podman-compose
+    state: present
+  when:
+    - podman_install_compose | bool
+    - ansible_distribution_major_version | int >= 8

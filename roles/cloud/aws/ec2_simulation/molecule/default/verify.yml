@@ -1,0 +1,65 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Check EC2 metadata directory exists
+      ansible.builtin.stat:
+        path: /var/lib/ec2-metadata
+      register: metadata_dir
+
+    - name: Assert metadata directory exists
+      ansible.builtin.assert:
+        that: metadata_dir.stat.exists
+        fail_msg: "EC2 metadata directory does not exist"
+
+    - name: Check instance-id file exists
+      ansible.builtin.stat:
+        path: /var/lib/ec2-metadata/latest/meta-data/instance-id
+      register: instance_id_file
+
+    - name: Assert instance-id file exists
+      ansible.builtin.assert:
+        that: instance_id_file.stat.exists
+        fail_msg: "Instance ID metadata file does not exist"
+
+    - name: Check mock service script exists
+      ansible.builtin.stat:
+        path: /usr/local/bin/ec2-metadata-mock
+      register: mock_script
+
+    - name: Assert mock script exists
+      ansible.builtin.assert:
+        that: mock_script.stat.exists
+        fail_msg: "EC2 metadata mock script does not exist"
+
+    - name: Check systemd service file exists
+      ansible.builtin.stat:
+        path: /etc/systemd/system/ec2-metadata-mock.service
+      register: service_file
+
+    - name: Assert service file exists
+      ansible.builtin.assert:
+        that: service_file.stat.exists
+        fail_msg: "EC2 metadata mock service file does not exist"
+
+    - name: Check instance identity document
+      ansible.builtin.stat:
+        path: /var/lib/ec2-metadata/latest/dynamic/instance-identity/document
+      register: identity_doc
+
+    - name: Assert instance identity document exists
+      ansible.builtin.assert:
+        that: identity_doc.stat.exists
+        fail_msg: "Instance identity document does not exist"
+
+    - name: Read instance-id
+      ansible.builtin.slurp:
+        src: /var/lib/ec2-metadata/latest/meta-data/instance-id
+      register: instance_id_content
+
+    - name: Verify instance-id format
+      ansible.builtin.assert:
+        that: instance_id_content.content | b64decode | regex_search('^i-')
+        fail_msg: "Instance ID does not start with 'i-'"

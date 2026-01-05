@@ -1,0 +1,38 @@
+---
+galaxy_info:
+  role_name: docker
+  namespace: containers
+  author: DevOps Team
+  description: Install and configure Docker CE
+  company: Example Organization
+
+  license: MIT
+
+  min_ansible_version: "2.12"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+    - name: Fedora
+      versions:
+        - "38"
+        - "39"
+
+  galaxy_tags:
+    - docker
+    - containers
+    - containerization
+    - devops
+
+dependencies: []

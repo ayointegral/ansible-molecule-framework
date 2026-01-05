@@ -1,0 +1,15 @@
+[Unit]
+Description=Azure Key Vault Mock Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/bin/keyvault-mock
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment=FLASK_ENV=production
+
+[Install]
+WantedBy=multi-user.target

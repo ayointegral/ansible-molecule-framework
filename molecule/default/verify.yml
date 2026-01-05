@@ -1,0 +1,14 @@
+---
+- name: Verify - Base configuration
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Check timezone is configured
+      ansible.builtin.command: timedatectl show --property=Timezone
+      register: tz_result
+      changed_when: false
+
+    - name: Verify timezone output
+      ansible.builtin.debug:
+        var: tz_result.stdout

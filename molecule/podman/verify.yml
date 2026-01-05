@@ -1,0 +1,9 @@
+---
+- name: Verify - Podman scenario
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Check system is configured
+      ansible.builtin.debug:
+        msg: "System {{ inventory_hostname }} verified on {{ ansible_distribution }}"

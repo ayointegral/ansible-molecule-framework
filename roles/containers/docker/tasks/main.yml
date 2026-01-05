@@ -1,0 +1,62 @@
+---
+- name: Include OS-specific installation tasks
+  ansible.builtin.include_tasks: "install-{{ ansible_os_family | lower }}.yml"
+
+- name: Ensure Docker configuration directory exists
+  ansible.builtin.file:
+    path: /etc/docker
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Configure Docker daemon
+  ansible.builtin.template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: "0644"
+    validate: "python3 -m json.tool %s"
+  notify: Restart docker
+
+- name: Ensure Docker service is in desired state
+  ansible.builtin.service:
+    name: docker
+    state: "{{ docker_service_state }}"
+    enabled: "{{ docker_service_enabled }}"
+
+- name: Add users to docker group
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: docker
+    append: true
+  loop: "{{ docker_users }}"
+  when: docker_users | length > 0
+
+- name: Install Docker Compose
+  when: docker_install_compose
+  block:
+    - name: Check if Docker Compose is already installed
+      ansible.builtin.stat:
+        path: /usr/local/bin/docker-compose
+      register: docker_compose_stat
+
+    - name: Get installed Docker Compose version
+      ansible.builtin.command: /usr/local/bin/docker-compose --version
+      register: docker_compose_installed_version
+      changed_when: false
+      failed_when: false
+      when: docker_compose_stat.stat.exists
+
+    - name: Download Docker Compose
+      ansible.builtin.get_url:
+        url: "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
+        dest: /usr/local/bin/docker-compose
+        mode: "0755"
+        owner: root
+        group: root
+      when: >
+        not docker_compose_stat.stat.exists or
+        (docker_compose_installed_version.stdout is defined and
+         docker_compose_version not in docker_compose_installed_version.stdout)

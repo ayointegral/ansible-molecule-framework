@@ -1,0 +1,34 @@
+---
+- name: Include OS-specific variables
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_os_family | lower }}.yml"
+    - "default.yml"
+
+- name: Install Redis
+  ansible.builtin.package:
+    name: "{{ redis_package_name }}"
+    state: present
+
+- name: Configure Redis
+  ansible.builtin.template:
+    src: redis.conf.j2
+    dest: "{{ redis_config_file }}"
+    owner: "{{ redis_user }}"
+    group: "{{ redis_group }}"
+    mode: '0640'
+  notify: Restart redis
+
+- name: Ensure Redis data directory exists
+  ansible.builtin.file:
+    path: "{{ redis_data_dir }}"
+    state: directory
+    owner: "{{ redis_user }}"
+    group: "{{ redis_group }}"
+    mode: '0750'
+
+- name: Start and enable Redis service
+  ansible.builtin.service:
+    name: "{{ redis_service_name }}"
+    state: "{{ redis_service_state }}"
+    enabled: "{{ redis_service_enabled }}"

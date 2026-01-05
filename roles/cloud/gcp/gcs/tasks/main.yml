@@ -1,0 +1,74 @@
+---
+- name: Create gcs group
+  ansible.builtin.group:
+    name: "{{ fake_gcs_group }}"
+    system: true
+    state: present
+
+- name: Create gcs user
+  ansible.builtin.user:
+    name: "{{ fake_gcs_user }}"
+    group: "{{ fake_gcs_group }}"
+    system: true
+    shell: /usr/sbin/nologin
+    home: "{{ fake_gcs_data_dir }}"
+    create_home: false
+
+- name: Create fake-gcs directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ fake_gcs_user }}"
+    group: "{{ fake_gcs_group }}"
+    mode: '0755'
+  loop:
+    - "{{ fake_gcs_install_dir }}"
+    - "{{ fake_gcs_data_dir }}"
+
+- name: Download fake-gcs-server binary
+  ansible.builtin.get_url:
+    url: "https://github.com/fsouza/fake-gcs-server/releases/download/v{{ fake_gcs_version }}/fake-gcs-server_{{ fake_gcs_version }}_linux_amd64.tar.gz"
+    dest: "/tmp/fake-gcs-server.tar.gz"
+    mode: '0644'
+  register: gcs_download
+  retries: 3
+  delay: 5
+  until: gcs_download is succeeded
+
+- name: Extract fake-gcs-server
+  ansible.builtin.unarchive:
+    src: "/tmp/fake-gcs-server.tar.gz"
+    dest: "{{ fake_gcs_install_dir }}"
+    remote_src: true
+    owner: "{{ fake_gcs_user }}"
+    group: "{{ fake_gcs_group }}"
+
+- name: Create symlink for fake-gcs-server binary
+  ansible.builtin.file:
+    src: "{{ fake_gcs_install_dir }}/fake-gcs-server"
+    dest: /usr/local/bin/fake-gcs-server
+    state: link
+
+- name: Create bucket directories
+  ansible.builtin.file:
+    path: "{{ fake_gcs_data_dir }}/{{ item }}"
+    state: directory
+    owner: "{{ fake_gcs_user }}"
+    group: "{{ fake_gcs_group }}"
+    mode: '0755'
+  loop: "{{ fake_gcs_buckets }}"
+
+- name: Create fake-gcs-server systemd service
+  ansible.builtin.template:
+    src: fake-gcs-server.service.j2
+    dest: /etc/systemd/system/fake-gcs-server.service
+    mode: '0644'
+  notify:
+    - Reload systemd
+    - Restart fake-gcs-server
+
+- name: Start and enable fake-gcs-server
+  ansible.builtin.service:
+    name: fake-gcs-server
+    state: "{{ fake_gcs_service_state }}"
+    enabled: "{{ fake_gcs_service_enabled }}"

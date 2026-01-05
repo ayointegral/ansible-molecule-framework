@@ -1,0 +1,80 @@
+---
+# Verify playbook for haproxy role
+
+- name: Verify haproxy installation
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Verify haproxy package is installed
+      ansible.builtin.package:
+        name: haproxy
+        state: present
+      check_mode: true
+      register: haproxy_pkg
+      failed_when: haproxy_pkg.changed
+
+    - name: Verify haproxy service is running
+      ansible.builtin.service:
+        name: haproxy
+        state: started
+      check_mode: true
+      register: haproxy_svc
+      failed_when: haproxy_svc.changed
+
+    - name: Verify haproxy service is enabled
+      ansible.builtin.service:
+        name: haproxy
+        enabled: true
+      check_mode: true
+      register: haproxy_enabled
+      failed_when: haproxy_enabled.changed
+
+    - name: Verify haproxy is listening on port 80
+      ansible.builtin.wait_for:
+        port: 80
+        timeout: 10
+
+    - name: Verify haproxy stats is listening on port 8404
+      ansible.builtin.wait_for:
+        port: 8404
+        timeout: 10
+
+    - name: Verify haproxy configuration syntax
+      ansible.builtin.command: haproxy -c -f /etc/haproxy/haproxy.cfg
+      register: haproxy_test
+      changed_when: false
+      failed_when: haproxy_test.rc != 0
+
+    - name: Test haproxy stats page responds
+      ansible.builtin.uri:
+        url: http://localhost:8404/stats
+        url_username: admin
+        url_password: testpass
+        force_basic_auth: true
+        return_content: true
+      register: stats_response
+      failed_when: stats_response.status != 200
+
+    - name: Verify haproxy configuration file exists
+      ansible.builtin.stat:
+        path: /etc/haproxy/haproxy.cfg
+      register: haproxy_cfg
+      failed_when: not haproxy_cfg.stat.exists
+
+    - name: Verify frontend http_front is configured
+      ansible.builtin.command: grep -q "frontend http_front" /etc/haproxy/haproxy.cfg
+      register: frontend_check
+      changed_when: false
+      failed_when: frontend_check.rc != 0
+
+    - name: Verify backend http_back is configured
+      ansible.builtin.command: grep -q "backend http_back" /etc/haproxy/haproxy.cfg
+      register: backend_check
+      changed_when: false
+      failed_when: backend_check.rc != 0
+
+    - name: Display verification summary
+      ansible.builtin.debug:
+        msg: "All haproxy verification checks passed!"

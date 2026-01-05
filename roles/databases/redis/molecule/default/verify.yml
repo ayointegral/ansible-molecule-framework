@@ -1,0 +1,29 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Check Redis package is installed
+      ansible.builtin.package:
+        name: redis-server
+        state: present
+      check_mode: true
+      register: redis_pkg
+
+    - name: Assert Redis is installed
+      ansible.builtin.assert:
+        that: not redis_pkg.changed
+        fail_msg: "Redis package is not installed"
+
+    - name: Check Redis service is running
+      ansible.builtin.service:
+        name: redis-server
+        state: started
+      check_mode: true
+      register: redis_svc
+
+    - name: Assert Redis service is running
+      ansible.builtin.assert:
+        that: not redis_svc.changed
+        fail_msg: "Redis service is not running"

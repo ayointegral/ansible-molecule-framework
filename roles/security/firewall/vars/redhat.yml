@@ -1,0 +1,30 @@
+---
+# RedHat/CentOS/Fedora specific variables
+
+firewall_packages:
+  firewalld:
+    - firewalld
+  iptables:
+    - iptables
+    - iptables-services
+  nftables:
+    - nftables
+
+firewall_services:
+  firewalld: firewalld
+  iptables: iptables
+  nftables: nftables
+
+# Default backend preference order for RedHat
+firewall_backend_preference:
+  - firewalld
+  - nftables
+  - iptables
+
+# Iptables save location
+firewall_iptables_rules_file: /etc/sysconfig/iptables
+firewall_ip6tables_rules_file: /etc/sysconfig/ip6tables
+
+# Firewalld configuration
+firewall_firewalld_config_dir: /etc/firewalld
+firewall_firewalld_zones_dir: /etc/firewalld/zones

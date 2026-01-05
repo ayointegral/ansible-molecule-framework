@@ -1,0 +1,50 @@
+---
+# Converge playbook for nginx role
+# Container-safe configuration
+
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    # Use OS distribution packages instead of official repo
+    nginx_use_official_repo: false
+    # Simple test vhost
+    nginx_vhosts:
+      - server_name: test.example.com
+        listen: 80
+        root: /var/www/test
+        index: index.html
+        locations:
+          - path: /
+            options:
+              - try_files $uri $uri/ =404
+    nginx_remove_default_vhost: true
+
+  pre_tasks:
+    - name: Update apt cache (Debian/Ubuntu)
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 600
+      when: ansible_os_family == 'Debian'
+
+    - name: Create test web root
+      ansible.builtin.file:
+        path: /var/www/test
+        state: directory
+        mode: '0755'
+
+    - name: Create test index.html
+      ansible.builtin.copy:
+        content: |
+          <!DOCTYPE html>
+          <html>
+          <head><title>Test Page</title></head>
+          <body><h1>Nginx Test Page</h1></body>
+          </html>
+        dest: /var/www/test/index.html
+        mode: '0644'
+
+  roles:
+    - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"

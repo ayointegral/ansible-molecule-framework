@@ -1,0 +1,87 @@
+# PostgreSQL configuration file
+# Managed by Ansible
+
+#------------------------------------------------------------------------------
+# FILE LOCATIONS
+#------------------------------------------------------------------------------
+
+data_directory = '{{ postgresql_data_dir }}'
+hba_file = '{{ postgresql_config_dir }}/pg_hba.conf'
+ident_file = '{{ postgresql_config_dir }}/pg_ident.conf'
+external_pid_file = '/var/run/postgresql/{{ postgresql_version }}-main.pid'
+
+#------------------------------------------------------------------------------
+# CONNECTIONS AND AUTHENTICATION
+#------------------------------------------------------------------------------
+
+unix_socket_directories = '/var/run/postgresql'
+listen_addresses = '{{ postgresql_listen_addresses }}'
+port = {{ postgresql_port }}
+max_connections = {{ postgresql_max_connections }}
+superuser_reserved_connections = {{ postgresql_superuser_reserved_connections }}
+
+#------------------------------------------------------------------------------
+# RESOURCE USAGE (except WAL)
+#------------------------------------------------------------------------------
+
+shared_buffers = {{ postgresql_shared_buffers }}
+work_mem = {{ postgresql_work_mem }}
+maintenance_work_mem = {{ postgresql_maintenance_work_mem }}
+effective_cache_size = {{ postgresql_effective_cache_size }}
+
+#------------------------------------------------------------------------------
+# WRITE-AHEAD LOG
+#------------------------------------------------------------------------------
+
+wal_level = {{ postgresql_wal_level }}
+wal_buffers = {{ postgresql_wal_buffers }}
+max_wal_size = {{ postgresql_max_wal_size }}
+min_wal_size = {{ postgresql_min_wal_size }}
+
+#------------------------------------------------------------------------------
+# CHECKPOINTS
+#------------------------------------------------------------------------------
+
+checkpoint_completion_target = {{ postgresql_checkpoint_completion_target }}
+checkpoint_timeout = {{ postgresql_checkpoint_timeout }}
+
+#------------------------------------------------------------------------------
+# REPORTING AND LOGGING
+#------------------------------------------------------------------------------
+
+log_destination = '{{ postgresql_log_destination }}'
+logging_collector = {{ 'on' if postgresql_logging_collector else 'off' }}
+log_directory = '{{ postgresql_log_directory }}'
+log_filename = '{{ postgresql_log_filename }}'
+log_rotation_age = {{ postgresql_log_rotation_age }}
+log_rotation_size = {{ postgresql_log_rotation_size }}
+log_min_duration_statement = {{ postgresql_log_min_duration_statement }}
+log_checkpoints = {{ 'on' if postgresql_log_checkpoints else 'off' }}
+log_connections = {{ 'on' if postgresql_log_connections else 'off' }}
+log_disconnections = {{ 'on' if postgresql_log_disconnections else 'off' }}
+log_lock_waits = {{ 'on' if postgresql_log_lock_waits else 'off' }}
+log_temp_files = {{ postgresql_log_temp_files }}
+log_timezone = '{{ postgresql_log_timezone }}'
+
+#------------------------------------------------------------------------------
+# CLIENT CONNECTION DEFAULTS
+#------------------------------------------------------------------------------
+
+datestyle = 'iso, mdy'
+timezone = '{{ postgresql_log_timezone }}'
+lc_messages = '{{ postgresql_locale | default("C.UTF-8") }}'
+lc_monetary = '{{ postgresql_locale | default("C.UTF-8") }}'
+lc_numeric = '{{ postgresql_locale | default("C.UTF-8") }}'
+lc_time = '{{ postgresql_locale | default("C.UTF-8") }}'
+default_text_search_config = 'pg_catalog.english'
+
+#------------------------------------------------------------------------------
+# SECURITY
+#------------------------------------------------------------------------------
+
+password_encryption = {{ postgresql_password_encryption }}
+{% if postgresql_ssl %}
+ssl = on
+ssl_cert_file = '{{ postgresql_ssl_cert_file }}'
+ssl_key_file = '{{ postgresql_ssl_key_file }}'
+{% endif %}

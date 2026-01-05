@@ -1,0 +1,36 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  vars:
+    user_groups:
+      - name: developers
+        gid: 2000
+      - name: ops
+        gid: 2001
+    users:
+      - name: testuser1
+        comment: "Test User 1"
+        uid: 3001
+        groups:
+          - developers
+        shell: /bin/bash
+        create_home: true
+        ssh_keys:
+          - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC0FakeKeyForTestingPurposes+More test@localhost"
+      - name: testuser2
+        comment: "Test User 2"
+        uid: 3002
+        groups:
+          - ops
+        shell: /bin/bash
+        create_home: true
+        sudo: true
+  pre_tasks:
+    - name: Update apt cache (Debian/Ubuntu)
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == 'Debian'
+  roles:
+    - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"

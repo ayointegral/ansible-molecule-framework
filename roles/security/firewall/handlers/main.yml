@@ -1,0 +1,44 @@
+---
+# Handlers for firewall role
+
+- name: Restart firewalld
+  ansible.builtin.systemd:
+    name: firewalld
+    state: restarted
+    enabled: true
+  when: firewall_enabled | bool
+
+- name: Reload firewalld
+  ansible.builtin.command: firewall-cmd --reload
+  when: firewall_enabled | bool
+  changed_when: true
+
+- name: Restart iptables
+  ansible.builtin.systemd:
+    name: "{{ firewall_services.iptables }}"
+    state: restarted
+    enabled: true
+  when: firewall_enabled | bool
+
+- name: Save iptables rules
+  ansible.builtin.shell: |
+    iptables-save > {{ firewall_iptables_rules_file }}
+    {% if firewall_ipv6_enabled %}
+    ip6tables-save > {{ firewall_ip6tables_rules_file }}
+    {% endif %}
+  when:
+    - firewall_persistent | bool
+    - firewall_enabled | bool
+  changed_when: true
+
+- name: Restart ufw
+  ansible.builtin.systemd:
+    name: ufw
+    state: restarted
+    enabled: true
+  when: firewall_enabled | bool
+
+- name: Reload ufw
+  ansible.builtin.command: ufw reload
+  when: firewall_enabled | bool
+  changed_when: true

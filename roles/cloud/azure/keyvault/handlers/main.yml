@@ -1,0 +1,7 @@
+---
+- name: Restart keyvault-mock
+  ansible.builtin.systemd:
+    name: keyvault-mock
+    state: restarted
+    daemon_reload: true
+  when: keyvault_enabled

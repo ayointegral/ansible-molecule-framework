@@ -1,0 +1,366 @@
+direction: right
+
+title: {
+  label: Ansible Molecule Testing Framework
+  near: top-center
+  shape: text
+  style: {
+    font-size: 28
+    bold: true
+  }
+}
+
+# ============================================================================
+# INFRASTRUCTURE
+# ============================================================================
+infrastructure: {
+  label: Infrastructure
+  style: {
+    fill: "#e3f2fd"
+    stroke: "#1565c0"
+    stroke-width: 2
+  }
+
+  environments: {
+    label: "15 Environments"
+    style: { fill: "#bbdefb" }
+    
+    live: {
+      label: "Live (7)"
+      style: { fill: "#c8e6c9" }
+      production
+      staging
+      development
+      qa
+      uat
+      dr
+      dmz
+    }
+    
+    test: {
+      label: "Test (7)"
+      style: { fill: "#fff9c4" }
+      production_test
+      staging_test
+      development_test
+      qa_test
+      uat_test
+      dr_test
+      dmz_test
+    }
+    
+    shared: {
+      label: "Shared"
+      style: { fill: "#f8bbd0" }
+      group_vars
+      host_vars
+    }
+  }
+}
+
+# ============================================================================
+# ROLES
+# ============================================================================
+roles: {
+  label: "26 Ansible Roles"
+  style: {
+    fill: "#f3e5f5"
+    stroke: "#7b1fa2"
+    stroke-width: 2
+  }
+  
+  common: {
+    label: "Common (3)"
+    style: { fill: "#e1bee7" }
+    base
+    packages
+    users
+  }
+  
+  containers: {
+    label: "Containers (2)"
+    style: { fill: "#b3e5fc" }
+    docker
+    podman
+  }
+  
+  databases: {
+    label: "Databases (3)"
+    style: { fill: "#c8e6c9" }
+    postgresql
+    mysql
+    redis
+  }
+  
+  monitoring: {
+    label: "Monitoring (4)"
+    style: { fill: "#fff9c4" }
+    prometheus
+    grafana
+    alertmanager
+    node_exporter
+  }
+  
+  security: {
+    label: "Security (1)"
+    style: { fill: "#ffcdd2" }
+    firewall
+  }
+  
+  storage: {
+    label: "Storage (3)"
+    style: { fill: "#d7ccc8" }
+    disk_management
+    lvm
+    nfs
+  }
+  
+  web: {
+    label: "Web (2)"
+    style: { fill: "#b2dfdb" }
+    nginx
+    haproxy
+  }
+  
+  cloud: {
+    label: "Cloud (5)"
+    style: { fill: "#d1c4e9" }
+    
+    aws: {
+      label: AWS
+      s3
+      ec2_simulation
+    }
+    azure: {
+      label: Azure
+      storage_account
+      keyvault
+    }
+    gcp: {
+      label: GCP
+      gcs
+    }
+  }
+  
+  windows: {
+    label: "Windows (3)"
+    style: { fill: "#ffccbc" }
+    iis
+    windows_features
+    windows_firewall
+  }
+}
+
+# ============================================================================
+# TESTING
+# ============================================================================
+testing: {
+  label: "Molecule Testing"
+  style: {
+    fill: "#fff8e1"
+    stroke: "#f57c00"
+    stroke-width: 2
+  }
+  
+  drivers: {
+    label: "Drivers"
+    style: { fill: "#ffe0b2" }
+    
+    docker_drv: {
+      label: Docker
+      style: { fill: "#e3f2fd" }
+    }
+    podman_drv: {
+      label: Podman
+      style: { fill: "#e8f5e9" }
+    }
+    vagrant_drv: {
+      label: Vagrant
+      style: { fill: "#fce4ec" }
+    }
+    delegated_drv: {
+      label: Delegated
+      style: { fill: "#fff3e0" }
+    }
+  }
+  
+  test_types: {
+    label: "Test Scenarios"
+    style: { fill: "#ffecb3" }
+    default_scn: default
+    podman_scn: podman
+    qemu_scn: qemu
+    delegated_scn: delegated
+  }
+  
+  platforms: {
+    label: "Platforms"
+    style: { fill: "#c8e6c9" }
+    
+    linux: {
+      label: Linux
+      ubuntu: Ubuntu 22.04
+      debian: Debian 12
+      rocky: Rocky Linux 9
+    }
+    
+    windows: {
+      label: Windows
+      win2022: Windows Server 2022
+    }
+  }
+  
+  test_flow: {
+    label: "Test Sequence"
+    style: { fill: "#b3e5fc" }
+    step1: "1. dependency"
+    step2: "2. destroy"
+    step3: "3. syntax"
+    step4: "4. create"
+    step5: "5. converge"
+    step6: "6. idempotence"
+    step7: "7. verify"
+    step8: "8. destroy"
+    
+    step1 -> step2 -> step3 -> step4
+    step4 -> step5 -> step6 -> step7 -> step8
+  }
+}
+
+# ============================================================================
+# CI/CD
+# ============================================================================
+cicd: {
+  label: "CI/CD Pipeline"
+  style: {
+    fill: "#e0f2f1"
+    stroke: "#00897b"
+    stroke-width: 2
+  }
+  
+  simulator: {
+    label: "CI Simulator"
+    style: { fill: "#b2dfdb" }
+    
+    lint_stg: lint
+    syntax_stg: syntax
+    molecule_stg: molecule
+    
+    lint_stg -> syntax_stg -> molecule_stg
+  }
+  
+  reports: {
+    label: "Reports"
+    style: { fill: "#c8e6c9" }
+    json_rpt: JSON
+    html_rpt: HTML
+    junit_rpt: JUnit
+  }
+  
+  make_targets: {
+    label: "Make Targets"
+    style: { fill: "#fff9c4" }
+    lint_tgt: make lint
+    syntax_tgt: make syntax
+    molecule_tgt: make molecule
+    all_tgt: make molecule-all
+    windows_tgt: make windows-test
+  }
+}
+
+# ============================================================================
+# CONFIGURATION
+# ============================================================================
+config: {
+  label: "Configuration"
+  style: {
+    fill: "#fce4ec"
+    stroke: "#c2185b"
+    stroke-width: 2
+  }
+  
+  files: {
+    label: "Config Files"
+    style: { fill: "#f8bbd0" }
+    ansible_cfg: ansible.cfg
+    requirements_txt: requirements.txt
+    requirements_yml: requirements.yml
+    yamllint: .yamllint.yml
+  }
+  
+  python_deps: {
+    label: "Python Dependencies"
+    style: { fill: "#e1bee7" }
+    ansible: ansible-core
+    molecule: molecule
+    docker: molecule-docker
+    vagrant: molecule-vagrant
+    winrm: pywinrm
+  }
+  
+  collections: {
+    label: "Ansible Collections"
+    style: { fill: "#d1c4e9" }
+    community: community.general
+    posix: ansible.posix
+    docker_col: community.docker
+    windows_col: ansible.windows
+  }
+}
+
+# ============================================================================
+# WINDOWS TESTING
+# ============================================================================
+windows_test: {
+  label: "Windows Testing"
+  style: {
+    fill: "#ffebee"
+    stroke: "#c62828"
+    stroke-width: 2
+  }
+  
+  requirements: {
+    label: "Requirements"
+    style: { fill: "#ffcdd2" }
+    winrm: WinRM Enabled
+    firewall: Port 5985/5986
+    admin: Administrator Access
+  }
+  
+  connection: {
+    label: "Connection"
+    style: { fill: "#ef9a9a" }
+    host: WINDOWS_HOST
+    user: WINDOWS_USER
+    password: WINDOWS_PASSWORD
+  }
+  
+  options: {
+    label: "Testing Options"
+    style: { fill: "#ffcdd2" }
+    virtualbox: VirtualBox (x64)
+    qemu: QEMU (slow on ARM)
+    delegated: Remote Host
+    azure: Azure VM
+    aws: AWS EC2
+  }
+}
+
+# ============================================================================
+# CONNECTIONS
+# ============================================================================
+
+infrastructure -> roles: configures
+roles -> testing: tested by
+testing -> cicd: runs in
+config -> infrastructure
+config -> roles
+config -> testing
+cicd.simulator -> cicd.reports: generates
+
+roles.windows -> windows_test: requires
+testing.drivers.delegated_drv -> windows_test
+testing.platforms.windows -> windows_test
+
+testing.drivers.docker_drv -> testing.platforms.linux
+testing.drivers.podman_drv -> testing.platforms.linux

@@ -1,0 +1,18 @@
+---
+# handlers/main.yml - HAProxy handlers
+
+- name: Restart HAProxy
+  ansible.builtin.service:
+    name: haproxy
+    state: restarted
+  when: haproxy_service_state == 'started'
+
+- name: Reload HAProxy
+  ansible.builtin.service:
+    name: haproxy
+    state: reloaded
+  when: haproxy_service_state == 'started'
+
+- name: Validate HAProxy configuration
+  ansible.builtin.command: haproxy -c -f /etc/haproxy/haproxy.cfg
+  changed_when: false

@@ -1,0 +1,53 @@
+---
+# Podman role defaults
+
+# Container registries configuration
+podman_registries:
+  search:
+    - docker.io
+    - quay.io
+    - ghcr.io
+  insecure: []
+  blocked: []
+
+# Unqualified search registries (for short names)
+podman_unqualified_search_registries:
+  - docker.io
+  - quay.io
+
+# Storage configuration
+podman_storage_driver: overlay
+podman_storage_root: /var/lib/containers/storage
+podman_storage_runroot: /run/containers/storage
+podman_storage_graphroot: "{{ podman_storage_root }}"
+
+# Additional storage options for overlay driver
+podman_storage_options:
+  overlay:
+    mount_program: /usr/bin/fuse-overlayfs
+    mountopt: nodev,metacopy=on
+
+# Rootless container support
+podman_configure_rootless: true
+podman_rootless_storage_path: "$HOME/.local/share/containers/storage"
+
+# User namespace configuration for rootless
+podman_subuid_start: 100000
+podman_subuid_count: 65536
+
+# Additional packages to install
+podman_additional_packages:
+  - slirp4netns
+  - fuse-overlayfs
+  - containernetworking-plugins
+
+# Whether to install podman-compose
+podman_install_compose: false
+
+# Configuration file paths
+podman_registries_conf_path: /etc/containers/registries.conf
+podman_storage_conf_path: /etc/containers/storage.conf
+
+# Service configuration
+podman_enable_socket: true
+podman_socket_users: []

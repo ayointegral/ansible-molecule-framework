@@ -1,0 +1,45 @@
+---
+# Role metadata
+
+galaxy_info:
+  role_name: firewall
+  namespace: security
+  author: Security Team
+  description: Manage firewall configuration for iptables, firewalld, and ufw
+  company: Organization
+
+  license: MIT
+
+  min_ansible_version: "2.10"
+
+  platforms:
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+    - name: Fedora
+      versions:
+        - "38"
+        - "39"
+        - "40"
+
+  galaxy_tags:
+    - security
+    - firewall
+    - iptables
+    - firewalld
+    - ufw
+    - nftables
+    - networking
+    - hardening
+
+dependencies: []

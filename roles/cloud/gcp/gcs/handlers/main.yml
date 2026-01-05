@@ -1,0 +1,9 @@
+---
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart fake-gcs-server
+  ansible.builtin.service:
+    name: fake-gcs-server
+    state: restarted

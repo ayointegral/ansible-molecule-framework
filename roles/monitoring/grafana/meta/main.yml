@@ -1,0 +1,30 @@
+---
+galaxy_info:
+  author: Ansible Molecule Testing
+  description: Grafana installation and configuration
+  company: Testing Framework
+  license: MIT
+  min_ansible_version: "2.12"
+  role_name: grafana
+  namespace: monitoring
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - focal
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+  galaxy_tags:
+    - monitoring
+    - grafana
+    - visualization
+    - dashboards
+
+dependencies: []
+

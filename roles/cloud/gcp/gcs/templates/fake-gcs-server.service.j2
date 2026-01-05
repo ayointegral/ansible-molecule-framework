@@ -1,0 +1,21 @@
+[Unit]
+Description=Fake GCS Server - Google Cloud Storage Emulator
+Documentation=https://github.com/fsouza/fake-gcs-server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ fake_gcs_user }}
+Group={{ fake_gcs_group }}
+ExecStart=/usr/local/bin/fake-gcs-server \
+  -host {{ fake_gcs_listen_address }} \
+  -port {{ fake_gcs_port }} \
+  -scheme {{ fake_gcs_scheme }} \
+  -public-host {{ fake_gcs_public_host }} \
+  -data {{ fake_gcs_data_dir }}
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,95 @@
+---
+# Main tasks for package management
+
+- name: Include OS-specific variables
+  ansible.builtin.include_vars: "{{ ansible_os_family | lower }}.yml"
+
+# Debian/Ubuntu package management
+- name: Configure APT repositories
+  when: ansible_os_family == "Debian"
+  block:
+    - name: Add APT repository keys
+      ansible.builtin.apt_key:
+        url: "{{ item.key_url }}"
+        state: present
+      loop: "{{ packages_apt_repositories }}"
+      when:
+        - packages_apt_repositories | length > 0
+        - item.key_url is defined
+
+    - name: Add APT repositories
+      ansible.builtin.apt_repository:
+        repo: "{{ item.repo }}"
+        state: present
+        filename: "{{ item.filename | default(omit) }}"
+        update_cache: false
+      loop: "{{ packages_apt_repositories }}"
+      when: packages_apt_repositories | length > 0
+      notify: Update apt cache
+
+    - name: Flush handlers to update apt cache
+      ansible.builtin.meta: flush_handlers
+
+    - name: Install packages (Debian)
+      ansible.builtin.apt:
+        name: "{{ packages_install + packages_install_debian }}"
+        state: present
+        update_cache: true
+        cache_valid_time: "{{ packages_cache_valid_time }}"
+      when: (packages_install + packages_install_debian) | length > 0
+
+    - name: Remove packages (Debian)
+      ansible.builtin.apt:
+        name: "{{ packages_remove + packages_remove_debian }}"
+        state: absent
+        purge: "{{ packages_purge_on_remove }}"
+      when: (packages_remove + packages_remove_debian) | length > 0
+
+# RedHat/CentOS package management
+- name: Configure YUM/DNF repositories
+  when: ansible_os_family == "RedHat"
+  block:
+    - name: Add YUM/DNF repositories
+      ansible.builtin.yum_repository:
+        name: "{{ item.name }}"
+        description: "{{ item.description | default(item.name) }}"
+        baseurl: "{{ item.baseurl | default(omit) }}"
+        mirrorlist: "{{ item.mirrorlist | default(omit) }}"
+        gpgcheck: "{{ item.gpgcheck | default(true) }}"
+        gpgkey: "{{ item.gpgkey | default(omit) }}"
+        enabled: "{{ item.enabled | default(true) }}"
+        state: present
+      loop: "{{ packages_yum_repositories }}"
+      when: packages_yum_repositories | length > 0
+      notify: Update yum cache
+
+    - name: Flush handlers to update yum cache
+      ansible.builtin.meta: flush_handlers
+
+    - name: Install packages (RedHat)
+      ansible.builtin.dnf:
+        name: "{{ packages_install + packages_install_redhat }}"
+        state: present
+      when: (packages_install + packages_install_redhat) | length > 0
+
+    - name: Remove packages (RedHat)
+      ansible.builtin.dnf:
+        name: "{{ packages_remove + packages_remove_redhat }}"
+        state: absent
+      when: (packages_remove + packages_remove_redhat) | length > 0
+
+# Common package state management
+- name: Ensure packages are at latest version
+  when: packages_upgrade_all
+  block:
+    - name: Upgrade all packages (Debian)
+      ansible.builtin.apt:
+        upgrade: safe
+        update_cache: true
+      when: ansible_os_family == "Debian"
+
+    - name: Upgrade all packages (RedHat)
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+      when: ansible_os_family == "RedHat"

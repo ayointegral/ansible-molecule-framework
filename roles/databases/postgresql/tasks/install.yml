@@ -1,0 +1,108 @@
+---
+# Installation tasks for postgresql role
+
+- name: Add PostgreSQL APT repository key (Debian/Ubuntu)
+  ansible.builtin.apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+  when:
+    - ansible_os_family == 'Debian'
+    - postgresql_use_official_repo | default(true)
+
+- name: Add PostgreSQL APT repository (Debian/Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: "deb http://apt.postgresql.org/pub/repos/apt {{ ansible_distribution_release }}-pgdg main"
+    state: present
+    filename: pgdg
+  when:
+    - ansible_os_family == 'Debian'
+    - postgresql_use_official_repo | default(true)
+
+- name: Install PostgreSQL packages from official repo (Debian/Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - "postgresql-{{ postgresql_version }}"
+      - "postgresql-client-{{ postgresql_version }}"
+      - postgresql-contrib
+      - python3-psycopg2
+    state: "{{ postgresql_package_state }}"
+    update_cache: true
+  when:
+    - ansible_os_family == 'Debian'
+    - postgresql_use_official_repo | default(true)
+
+- name: Install PostgreSQL packages from distro (Debian/Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+    state: "{{ postgresql_package_state }}"
+    update_cache: true
+  when:
+    - ansible_os_family == 'Debian'
+    - not (postgresql_use_official_repo | default(true))
+
+- name: Install PostgreSQL repository (RedHat)
+  ansible.builtin.yum:
+    name: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
+    state: present
+    disable_gpg_check: true
+  when:
+    - ansible_os_family == 'RedHat'
+    - postgresql_use_official_repo | default(true)
+
+- name: Disable built-in PostgreSQL module (RedHat 8+)
+  ansible.builtin.command: dnf -qy module disable postgresql
+  args:
+    creates: /etc/dnf/modules.d/postgresql.module
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version | int >= 8
+    - postgresql_use_official_repo | default(true)
+
+- name: Install PostgreSQL packages from official repo (RedHat)
+  ansible.builtin.yum:
+    name:
+      - "postgresql{{ postgresql_version }}-server"
+      - "postgresql{{ postgresql_version }}"
+      - "postgresql{{ postgresql_version }}-contrib"
+      - python3-psycopg2
+    state: "{{ postgresql_package_state }}"
+  when:
+    - ansible_os_family == 'RedHat'
+    - postgresql_use_official_repo | default(true)
+
+- name: Install PostgreSQL packages from distro (RedHat)
+  ansible.builtin.yum:
+    name:
+      - postgresql-server
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+    state: "{{ postgresql_package_state }}"
+  when:
+    - ansible_os_family == 'RedHat'
+    - not (postgresql_use_official_repo | default(true))
+
+- name: Initialize PostgreSQL database (RedHat with official repo)
+  ansible.builtin.command: "/usr/pgsql-{{ postgresql_version }}/bin/postgresql-{{ postgresql_version }}-setup initdb"
+  args:
+    creates: "/var/lib/pgsql/{{ postgresql_version }}/data/PG_VERSION"
+  when:
+    - ansible_os_family == 'RedHat'
+    - postgresql_use_official_repo | default(true)
+
+- name: Initialize PostgreSQL database (RedHat with distro)
+  ansible.builtin.command: "postgresql-setup --initdb"
+  args:
+    creates: "/var/lib/pgsql/data/PG_VERSION"
+  when:
+    - ansible_os_family == 'RedHat'
+    - not (postgresql_use_official_repo | default(true))
+
+- name: Ensure PostgreSQL service is started
+  ansible.builtin.service:
+    name: postgresql
+    state: started
+    enabled: true

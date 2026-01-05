@@ -1,0 +1,28 @@
+---
+# Live Platform Core Group Variables
+
+# DNS Configuration
+dns_forwarders:
+  - 8.8.8.8
+  - 8.8.4.4
+
+dns_zones:
+  - name: live.platform.local
+    type: master
+  - name: 1.1.10.in-addr.arpa
+    type: master
+
+# NTP Configuration
+ntp_servers:
+  - 0.pool.ntp.org
+  - 1.pool.ntp.org
+  - 2.pool.ntp.org
+
+# LDAP Configuration
+ldap_base_dn: "dc=live,dc=platform,dc=local"
+ldap_admin_dn: "cn=admin,dc=live,dc=platform,dc=local"
+
+# Common platform-core settings
+platform_core_monitoring_enabled: true
+platform_core_backup_enabled: true
+platform_core_log_retention_days: 90

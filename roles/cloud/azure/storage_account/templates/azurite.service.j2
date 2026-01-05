@@ -1,0 +1,31 @@
+[Unit]
+Description=Azurite Azure Storage Emulator
+Documentation=https://docs.microsoft.com/azure/storage/common/storage-use-azurite
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ azurite_user }}
+Group={{ azurite_group }}
+WorkingDirectory={{ azurite_data_dir }}
+ExecStart=/usr/bin/npx azurite \
+  --blobHost {{ azurite_listen_address }} \
+  --blobPort {{ azurite_blob_port }} \
+  --queueHost {{ azurite_listen_address }} \
+  --queuePort {{ azurite_queue_port }} \
+  --tableHost {{ azurite_listen_address }} \
+  --tablePort {{ azurite_table_port }} \
+  --location {{ azurite_data_dir }} \
+{% if azurite_loose_mode %}
+  --loose \
+{% endif %}
+{% if azurite_skip_api_version_check %}
+  --skipApiVersionCheck \
+{% endif %}
+  --silent
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

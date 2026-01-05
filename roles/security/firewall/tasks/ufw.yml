@@ -1,0 +1,140 @@
+---
+# UFW specific tasks
+
+- name: Ensure UFW is installed
+  ansible.builtin.package:
+    name: ufw
+    state: present
+
+- name: Reset UFW to defaults (if requested)
+  community.general.ufw:
+    state: reset
+  when: firewall_ufw_reset | default(false) | bool
+
+- name: Set default incoming policy
+  community.general.ufw:
+    direction: incoming
+    policy: "{{ firewall_default_policy }}"
+
+- name: Set default outgoing policy
+  community.general.ufw:
+    direction: outgoing
+    policy: allow
+
+- name: Allow loopback traffic
+  community.general.ufw:
+    rule: allow
+    interface: lo
+    direction: in
+  when: firewall_allow_loopback | bool
+
+- name: Allow established and related connections
+  ansible.builtin.lineinfile:
+    path: /etc/ufw/before.rules
+    line: "-A ufw-before-input -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT"
+    insertafter: "^# End required lines"
+  when: firewall_allow_established | bool
+  notify: Reload ufw
+
+- name: Open ports
+  community.general.ufw:
+    rule: allow
+    port: "{{ item.port | string }}"
+    proto: "{{ item.protocol | default('tcp') }}"
+    comment: "{{ item.comment | default('Allow port ' + item.port | string) }}"
+  loop: "{{ firewall_open_ports | selectattr('port', 'ne', 22) | list if (firewall_ssh_rate_limit | bool) else firewall_open_ports }}"
+  loop_control:
+    label: "{{ item.port }}/{{ item.protocol | default('tcp') }}"
+
+- name: Allow services
+  community.general.ufw:
+    rule: allow
+    name: "{{ item.name }}"
+    comment: "{{ item.comment | default('Allow service ' + item.name) }}"
+  loop: "{{ firewall_allowed_services }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: ufw_service_result
+  failed_when: 
+    - ufw_service_result is failed
+    - "'Could not find a profile' not in (ufw_service_result.msg | default(''))"
+  when: firewall_allowed_services | length > 0
+
+- name: Allow source IPs with all access
+  community.general.ufw:
+    rule: allow
+    from_ip: "{{ item.ip }}"
+    comment: "{{ item.comment | default('Allow from ' + item.ip) }}"
+  loop: "{{ firewall_allowed_sources }}"
+  loop_control:
+    label: "{{ item.ip }}"
+  when: item.ports is not defined
+
+- name: Allow source IPs with specific ports
+  community.general.ufw:
+    rule: allow
+    from_ip: "{{ item.0.ip }}"
+    port: "{{ item.1 | string }}"
+    proto: "{{ item.0.protocol | default('tcp') }}"
+    comment: "{{ item.0.comment | default('Allow ' + item.0.ip + ' to port ' + item.1 | string) }}"
+  loop: "{{ firewall_allowed_sources | subelements('ports', skip_missing=True) }}"
+  loop_control:
+    label: "{{ item.0.ip }}:{{ item.1 }}"
+
+- name: Block source IPs
+  community.general.ufw:
+    rule: deny
+    from_ip: "{{ item.ip }}"
+    comment: "{{ item.comment | default('Block ' + item.ip) }}"
+  loop: "{{ firewall_blocked_sources }}"
+  loop_control:
+    label: "{{ item.ip }}"
+
+- name: Apply custom UFW rules
+  community.general.ufw:
+    rule: "{{ item.rule | default('allow') }}"
+    port: "{{ item.port | string | default(omit) }}"
+    proto: "{{ item.proto | default(omit) }}"
+    from_ip: "{{ item.from_ip | default(omit) }}"
+    to_ip: "{{ item.to_ip | default(omit) }}"
+    interface: "{{ item.interface | default(omit) }}"
+    direction: "{{ item.direction | default(omit) }}"
+    comment: "{{ item.comment | default(omit) }}"
+  loop: "{{ firewall_ufw_rules }}"
+  loop_control:
+    label: "{{ item.comment | default(item.rule | default('allow')) }}"
+
+- name: Apply SSH rate limiting
+  community.general.ufw:
+    rule: limit
+    port: "22"
+    proto: tcp
+    comment: "SSH rate limit"
+  when: firewall_ssh_rate_limit | bool
+
+- name: Enable logging
+  community.general.ufw:
+    logging: "on"
+  when: firewall_log_dropped | bool
+
+- name: Disable logging
+  community.general.ufw:
+    logging: "off"
+  when: not (firewall_log_dropped | bool)
+
+- name: Configure IPv6
+  ansible.builtin.lineinfile:
+    path: "{{ firewall_ufw_defaults_file }}"
+    regexp: "^IPV6="
+    line: "IPV6={{ 'yes' if firewall_ipv6_enabled else 'no' }}"
+  notify: Reload ufw
+
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled
+  when: firewall_enabled | bool
+
+- name: Disable UFW
+  community.general.ufw:
+    state: disabled
+  when: not (firewall_enabled | bool)

@@ -1,0 +1,59 @@
+---
+# tasks/mounts.yml - Mount point management
+
+- name: Create mount point directories
+  ansible.builtin.file:
+    path: "{{ item.1.mount_point }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ disk_management_disks | subelements('partitions', skip_missing=True) }}"
+  loop_control:
+    label: "{{ item.1.mount_point }}"
+  become: true
+  when:
+    - disk_management_create_mount_points
+    - item.1.mount_point is defined
+
+- name: Get partition UUIDs
+  ansible.builtin.command:
+    cmd: "blkid -s UUID -o value {{ item.0.device }}{{ item.1.number }}"
+  loop: "{{ disk_management_disks | subelements('partitions', skip_missing=True) }}"
+  loop_control:
+    label: "{{ item.0.device }}{{ item.1.number }}"
+  register: partition_uuids
+  changed_when: false
+  become: true
+  when: item.1.mount_point is defined
+
+- name: Mount filesystems and update fstab
+  ansible.posix.mount:
+    path: "{{ item.item.1.mount_point }}"
+    src: "UUID={{ item.stdout }}"
+    fstype: "{{ item.item.1.filesystem | default(disk_management_default_filesystem) }}"
+    opts: "{{ item.item.1.mount_options | default(disk_management_default_mount_options) }}"
+    state: mounted
+    backup: true
+  loop: "{{ partition_uuids.results | selectattr('stdout', 'defined') | list }}"
+  loop_control:
+    label: "{{ item.item.1.mount_point }}"
+  become: true
+  when:
+    - disk_management_update_fstab
+    - item.item.1.mount_point is defined
+    - item.stdout is defined
+    - item.stdout | length > 0
+
+- name: Mount filesystems without fstab update
+  ansible.posix.mount:
+    path: "{{ item.item.1.mount_point }}"
+    src: "{{ item.item.0.device }}{{ item.item.1.number }}"
+    fstype: "{{ item.item.1.filesystem | default(disk_management_default_filesystem) }}"
+    opts: "{{ item.item.1.mount_options | default(disk_management_default_mount_options) }}"
+    state: mounted
+  loop: "{{ partition_uuids.results | selectattr('stdout', 'defined') | list }}"
+  loop_control:
+    label: "{{ item.item.1.mount_point }}"
+  become: true
+  when:
+    - not disk_management_update_fstab
+    - item.item.1.mount_point is defined

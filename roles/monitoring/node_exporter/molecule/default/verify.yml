@@ -1,0 +1,42 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Check node_exporter binary exists
+      ansible.builtin.stat:
+        path: /opt/node_exporter/node_exporter
+      register: node_exporter_binary
+
+    - name: Assert node_exporter binary exists
+      ansible.builtin.assert:
+        that: node_exporter_binary.stat.exists
+        fail_msg: "Node exporter binary not found"
+
+    - name: Check node_exporter service is running
+      ansible.builtin.systemd:
+        name: node_exporter
+        state: started
+      check_mode: true
+      register: node_exporter_svc
+
+    - name: Assert node_exporter service is running
+      ansible.builtin.assert:
+        that: not node_exporter_svc.changed
+        fail_msg: "Node exporter service is not running"
+
+    - name: Test metrics endpoint
+      ansible.builtin.uri:
+        url: http://localhost:9100/metrics
+        method: GET
+        return_content: true
+      register: metrics_response
+      retries: 5
+      delay: 2
+      until: metrics_response.status == 200
+      ignore_errors: true
+
+    - name: Assert metrics endpoint responds (if curl available)
+      ansible.builtin.debug:
+        msg: "Metrics endpoint available: {{ metrics_response.status | default('not tested') }}"

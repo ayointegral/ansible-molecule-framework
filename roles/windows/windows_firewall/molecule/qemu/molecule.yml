@@ -1,0 +1,127 @@
+---
+# QEMU-based Windows testing (Preferred for macOS and Linux)
+#
+# Works on:
+#   - macOS ARM64 (M1-M4) - x86 emulation
+#   - macOS x86_64 (Intel) - native/near-native
+#   - Linux ARM64 - x86 emulation  
+#   - Linux x86_64 - KVM acceleration
+#
+# Prerequisites:
+#   macOS:  brew install qemu && vagrant plugin install vagrant-qemu
+#   Ubuntu: sudo apt install qemu-system-x86 && vagrant plugin install vagrant-qemu
+#   Fedora: sudo dnf install qemu-kvm && vagrant plugin install vagrant-qemu
+
+dependency:
+  name: galaxy
+  options:
+    requirements-file: requirements.yml
+
+driver:
+  name: vagrant
+  provider:
+    name: qemu
+
+platforms:
+  - name: windows-2019
+    box: gusztavvargadr/windows-server-2019-standard
+    memory: 4096
+    cpus: 2
+    groups:
+      - windows
+    provider_options:
+      # QEMU binary location (auto-detected on most systems)
+      # qemu_dir: "/opt/homebrew/bin"  # macOS ARM
+      # qemu_dir: "/usr/bin"           # Linux
+      ssh_port: 50022
+      extra_qemu_args:
+        - "-machine"
+        - "q35"
+    instance_raw_config_args:
+      - "vm.guest = :windows"
+      - "vm.communicator = 'winrm'"
+      - "winrm.username = 'vagrant'"
+      - "winrm.password = 'vagrant'"
+      - "vm.boot_timeout = 1200"
+      - "winrm.timeout = 600"
+      - "winrm.retry_limit = 30"
+    config_options:
+      synced_folder:
+        disabled: true
+
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ALLOW_BROKEN_CONDITIONALS: "true"
+    # Increase timeout for slower emulation
+    ANSIBLE_TIMEOUT: "120"
+  connection_options:
+    ansible_connection: winrm
+    ansible_winrm_transport: ntlm
+    ansible_winrm_server_cert_validation: ignore
+    ansible_port: 5985
+    ansible_user: vagrant
+    ansible_password: vagrant
+  config_options:
+    defaults:
+      callbacks_enabled: profile_tasks
+      timeout: 120
+
+verifier:
+  name: ansible
+
+scenario:
+  name: qemu
+  test_sequence:
+    - dependency
+    - cleanup
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - idempotence
+    - verify
+    - cleanup
+    - destroy
+
+# =============================================================================
+# PERFORMANCE NOTES
+# =============================================================================
+#
+# x86_64 Linux with KVM:
+#   - Near-native performance
+#   - Boot time: ~2-3 minutes
+#   - Full test: ~10-15 minutes
+#
+# x86_64 macOS:
+#   - Good performance with HVF
+#   - Boot time: ~3-5 minutes
+#   - Full test: ~15-20 minutes
+#
+# ARM64 (M1-M4 Mac, ARM Linux):
+#   - x86 emulation (slower)
+#   - Boot time: ~10-20 minutes
+#   - Full test: ~30-60 minutes
+#
+# First run downloads ~6GB Windows box image.
+#
+# =============================================================================
+# TROUBLESHOOTING
+# =============================================================================
+#
+# "QEMU not found":
+#   macOS: brew install qemu
+#   Linux: apt install qemu-system-x86 / dnf install qemu-kvm
+#
+# "vagrant-qemu plugin not found":
+#   vagrant plugin install vagrant-qemu
+#
+# "Boot timeout":
+#   Increase vm.boot_timeout in instance_raw_config_args
+#
+# "WinRM connection failed":
+#   - Ensure Windows fully booted (wait longer)
+#   - Check firewall allows WinRM (port 5985)
+#
+# =============================================================================

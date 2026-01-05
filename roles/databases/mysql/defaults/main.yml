@@ -1,0 +1,42 @@
+---
+# MySQL/MariaDB configuration
+mysql_root_password: "root_password_change_me"
+mysql_port: 3306
+mysql_bind_address: "127.0.0.1"
+mysql_max_connections: 151
+mysql_character_set: "utf8mb4"
+mysql_collation: "utf8mb4_unicode_ci"
+
+# Whether to use MariaDB or MySQL
+mysql_use_mariadb: true
+
+# Databases to create
+mysql_databases:
+  - name: app_db
+    encoding: utf8mb4
+    collation: utf8mb4_unicode_ci
+
+# Users to create
+mysql_users:
+  - name: app_user
+    host: localhost
+    password: "app_password_change_me"
+    priv: "app_db.*:ALL"
+
+# Service settings
+mysql_service_enabled: true
+mysql_service_state: started
+
+# Performance settings
+mysql_innodb_buffer_pool_size: "128M"
+mysql_innodb_log_file_size: "64M"
+mysql_query_cache_size: "16M"
+mysql_tmp_table_size: "64M"
+mysql_max_heap_table_size: "64M"
+mysql_slow_query_log: true
+mysql_slow_query_time: 2
+
+# Configuration file locations
+mysql_config_file: "/etc/mysql/mysql.conf.d/mysqld.cnf"
+mysql_datadir: "/var/lib/mysql"
+mysql_socket: "/var/run/mysqld/mysqld.sock"

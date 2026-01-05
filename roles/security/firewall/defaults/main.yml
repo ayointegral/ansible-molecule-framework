@@ -1,0 +1,89 @@
+---
+# Default variables for firewall role
+
+# Firewall backend: auto, firewalld, iptables, ufw
+# 'auto' will detect the appropriate backend based on the OS
+firewall_backend: auto
+
+# Whether to enable and start the firewall service
+firewall_enabled: true
+
+# Default policy for incoming traffic
+firewall_default_policy: deny
+
+# Default zone for firewalld
+firewall_default_zone: public
+
+# Ports to open (list of dicts with port, protocol, and optional zone)
+firewall_open_ports:
+  - port: 22
+    protocol: tcp
+    comment: "SSH access"
+
+# Services to allow (firewalld/ufw service names)
+firewall_allowed_services: []
+# Example:
+#   - name: http
+#     zone: public
+#   - name: https
+#     zone: public
+
+# Rich rules for firewalld (advanced rules)
+firewall_rich_rules: []
+# Example:
+#   - rule: 'rule family="ipv4" source address="192.168.1.0/24" service name="ssh" accept'
+#     zone: public
+#     state: enabled
+
+# Custom iptables rules (for iptables backend)
+firewall_iptables_rules: []
+# Example:
+#   - chain: INPUT
+#     protocol: tcp
+#     destination_port: 80
+#     jump: ACCEPT
+#     comment: "Allow HTTP"
+
+# UFW rules (for ufw backend)
+firewall_ufw_rules: []
+# Example:
+#   - rule: allow
+#     port: 80
+#     proto: tcp
+#     from_ip: any
+
+# Source IPs to allow (whitelist)
+firewall_allowed_sources: []
+# Example:
+#   - ip: 192.168.1.0/24
+#     ports: [22, 80, 443]
+#     protocol: tcp
+
+# Source IPs to block (blacklist)
+firewall_blocked_sources: []
+# Example:
+#   - ip: 10.0.0.100
+#     comment: "Blocked host"
+
+# Whether to log dropped packets
+firewall_log_dropped: false
+
+# Rate limiting for SSH (protection against brute force)
+firewall_ssh_rate_limit: true
+firewall_ssh_rate_limit_burst: 4
+firewall_ssh_rate_limit_period: 60
+
+# ICMP settings
+firewall_allow_icmp: true
+
+# Loopback settings
+firewall_allow_loopback: true
+
+# Established connections
+firewall_allow_established: true
+
+# IPv6 support
+firewall_ipv6_enabled: true
+
+# Persist rules across reboots
+firewall_persistent: true

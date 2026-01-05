@@ -1,0 +1,52 @@
+---
+- name: Verify IIS Installation
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Check if IIS service exists
+      ansible.windows.win_service:
+        name: W3SVC
+      register: iis_service
+
+    - name: Assert IIS service is installed
+      ansible.builtin.assert:
+        that:
+          - iis_service.exists
+        fail_msg: "IIS Web Service (W3SVC) is not installed"
+        success_msg: "IIS Web Service is installed"
+
+    - name: Check IIS service state
+      ansible.builtin.assert:
+        that:
+          - iis_service.state == 'running'
+        fail_msg: "IIS service is not running"
+        success_msg: "IIS service is running"
+
+    - name: Test IIS default page responds
+      ansible.windows.win_uri:
+        url: http://localhost/
+        return_content: false
+        status_code: 200
+      register: iis_response
+      ignore_errors: true
+
+    - name: Assert IIS responds on port 80
+      ansible.builtin.assert:
+        that:
+          - iis_response.status_code == 200
+        fail_msg: "IIS is not responding on port 80"
+        success_msg: "IIS responds on port 80"
+      when: iis_response is not failed
+
+    - name: Check IIS feature is installed
+      ansible.windows.win_powershell:
+        script: |
+          (Get-WindowsFeature -Name Web-Server).Installed
+      register: iis_feature
+
+    - name: Assert IIS feature is installed
+      ansible.builtin.assert:
+        that:
+          - iis_feature.output[0] == true
+        fail_msg: "Web-Server feature is not installed"
+        success_msg: "Web-Server feature is installed"

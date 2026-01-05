@@ -1,0 +1,178 @@
+---
+# tasks/main.yml - Main tasks for LVM role
+
+- name: Install LVM packages
+  ansible.builtin.package:
+    name: "{{ lvm_packages }}"
+    state: present
+  become: true
+  tags:
+    - lvm
+    - lvm_packages
+
+- name: Install filesystem-specific packages
+  ansible.builtin.package:
+    name: "{{ lvm_filesystem_packages[item.filesystem | default(lvm_default_filesystem)] }}"
+    state: present
+  loop: "{{ lvm_logical_volumes + lvm_thin_volumes }}"
+  when:
+    - item.filesystem is defined or lvm_default_filesystem is defined
+    - (item.filesystem | default(lvm_default_filesystem)) in lvm_filesystem_packages
+  become: true
+  tags:
+    - lvm
+    - lvm_packages
+
+- name: Create physical volumes
+  community.general.lvg:
+    vg: "{{ item.name }}"
+    pvs: "{{ item.pvs | join(',') }}"
+    state: present
+  loop: "{{ lvm_volume_groups }}"
+  become: true
+  when: lvm_volume_groups | length > 0
+  tags:
+    - lvm
+    - lvm_pv
+    - lvm_vg
+  notify: Reload systemd
+
+- name: Create volume groups
+  community.general.lvg:
+    vg: "{{ item.name }}"
+    pvs: "{{ item.pvs | join(',') }}"
+    pesize: "{{ item.pesize | default(4) }}"
+    state: "{{ item.state | default(lvm_default_state) }}"
+  loop: "{{ lvm_volume_groups }}"
+  become: true
+  when: lvm_volume_groups | length > 0
+  tags:
+    - lvm
+    - lvm_vg
+  notify: Reload systemd
+
+- name: Create thin pools
+  community.general.lvol:
+    vg: "{{ item.vg }}"
+    thinpool: "{{ item.name }}"
+    size: "{{ item.size }}"
+    state: present
+  loop: "{{ lvm_thin_pools }}"
+  become: true
+  when: lvm_thin_pools | length > 0
+  tags:
+    - lvm
+    - lvm_thin_pool
+  notify: Reload systemd
+
+- name: Create logical volumes
+  community.general.lvol:
+    vg: "{{ item.vg }}"
+    lv: "{{ item.name }}"
+    size: "{{ item.size }}"
+    state: "{{ item.state | default(lvm_default_state) }}"
+    resizefs: "{{ item.resizefs | default(lvm_resize_filesystem) }}"
+    shrink: "{{ item.shrink | default(false) }}"
+  loop: "{{ lvm_logical_volumes }}"
+  become: true
+  when: 
+    - lvm_logical_volumes | length > 0
+    - item.state | default(lvm_default_state) == 'present'
+  tags:
+    - lvm
+    - lvm_lv
+  notify: Reload systemd
+
+- name: Create thin logical volumes
+  community.general.lvol:
+    vg: "{{ item.vg }}"
+    lv: "{{ item.name }}"
+    thinpool: "{{ item.thin_pool }}"
+    size: "{{ item.size }}"
+    state: "{{ item.state | default(lvm_default_state) }}"
+  loop: "{{ lvm_thin_volumes }}"
+  become: true
+  when:
+    - lvm_thin_volumes | length > 0
+    - item.state | default(lvm_default_state) == 'present'
+  tags:
+    - lvm
+    - lvm_thin_lv
+  notify: Reload systemd
+
+- name: Create filesystems on logical volumes
+  community.general.filesystem:
+    fstype: "{{ item.filesystem | default(lvm_default_filesystem) }}"
+    dev: "/dev/{{ item.vg }}/{{ item.name }}"
+    resizefs: "{{ item.resizefs | default(lvm_resize_filesystem) }}"
+  loop: "{{ lvm_logical_volumes + lvm_thin_volumes }}"
+  become: true
+  when:
+    - item.filesystem is defined or lvm_default_filesystem is defined
+    - item.state | default(lvm_default_state) == 'present'
+  tags:
+    - lvm
+    - lvm_filesystem
+
+- name: Create mount point directories
+  ansible.builtin.file:
+    path: "{{ item.mount_point }}"
+    state: directory
+    mode: "{{ item.mount_mode | default('0755') }}"
+    owner: "{{ item.mount_owner | default('root') }}"
+    group: "{{ item.mount_group | default('root') }}"
+  loop: "{{ lvm_logical_volumes + lvm_thin_volumes }}"
+  become: true
+  when:
+    - item.mount_point is defined
+    - item.state | default(lvm_default_state) == 'present'
+  tags:
+    - lvm
+    - lvm_mount
+
+- name: Mount logical volumes
+  ansible.posix.mount:
+    path: "{{ item.mount_point }}"
+    src: "/dev/{{ item.vg }}/{{ item.name }}"
+    fstype: "{{ item.filesystem | default(lvm_default_filesystem) }}"
+    opts: "{{ item.mount_options | default(lvm_default_mount_options) }}"
+    state: "{{ item.mount_state | default('mounted') }}"
+    dump: "{{ item.mount_dump | default(0) }}"
+    passno: "{{ item.mount_passno | default(2) }}"
+  loop: "{{ lvm_logical_volumes + lvm_thin_volumes }}"
+  become: true
+  when:
+    - item.mount_point is defined
+    - item.state | default(lvm_default_state) == 'present'
+  tags:
+    - lvm
+    - lvm_mount
+
+- name: Remove logical volumes (when state is absent)
+  community.general.lvol:
+    vg: "{{ item.vg }}"
+    lv: "{{ item.name }}"
+    state: absent
+    force: "{{ item.force | default(true) }}"
+  loop: "{{ lvm_logical_volumes + lvm_thin_volumes }}"
+  become: true
+  when:
+    - item.state | default(lvm_default_state) == 'absent'
+  tags:
+    - lvm
+    - lvm_lv
+    - lvm_remove
+
+- name: Remove volume groups (when state is absent)
+  community.general.lvg:
+    vg: "{{ item.name }}"
+    state: absent
+    force: "{{ item.force | default(true) }}"
+  loop: "{{ lvm_volume_groups }}"
+  become: true
+  when:
+    - item.state | default(lvm_default_state) == 'absent'
+  tags:
+    - lvm
+    - lvm_vg
+    - lvm_remove

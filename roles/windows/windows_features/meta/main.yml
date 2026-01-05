@@ -1,0 +1,21 @@
+---
+galaxy_info:
+  author: Ansible Molecule Testing
+  description: Windows Features installation and management
+  company: Testing Framework
+  license: MIT
+  min_ansible_version: "2.12"
+  role_name: windows_features
+  namespace: windows
+  platforms:
+    - name: Windows
+      versions:
+        - "2019"
+        - "2022"
+  galaxy_tags:
+    - windows
+    - features
+    - microsoft
+
+dependencies: []
+

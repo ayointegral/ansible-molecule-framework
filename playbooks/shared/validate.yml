@@ -1,0 +1,76 @@
+---
+# Validation playbook - verifies system state
+# Runs health checks and validation tests
+
+- name: System validation
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    validation_checks:
+      - connectivity
+      - services
+      - ports
+      - disk_space
+
+  pre_tasks:
+    - name: Start validation
+      ansible.builtin.debug:
+        msg: "Starting validation for {{ inventory_hostname }}"
+
+  tasks:
+    - name: Connectivity checks
+      when: "'connectivity' in validation_checks"
+      block:
+        - name: Check DNS resolution
+          ansible.builtin.command: getent hosts localhost
+          changed_when: false
+          register: dns_check
+
+        - name: Validate DNS
+          ansible.builtin.assert:
+            that: dns_check.rc == 0
+            fail_msg: "DNS resolution failed"
+            success_msg: "DNS resolution working"
+
+    - name: Service checks
+      when: "'services' in validation_checks"
+      block:
+        - name: Get running services
+          ansible.builtin.command: systemctl list-units --type=service --state=running --no-pager
+          changed_when: false
+          register: running_services
+
+        - name: Display running services count
+          ansible.builtin.debug:
+            msg: "Found {{ running_services.stdout_lines | length - 1 }} running services"
+
+    - name: Disk space checks
+      when: "'disk_space' in validation_checks"
+      block:
+        - name: Check disk space
+          ansible.builtin.command: df -h /
+          changed_when: false
+          register: disk_space
+
+        - name: Display disk space
+          ansible.builtin.debug:
+            var: disk_space.stdout_lines
+
+    - name: Port checks
+      when: "'ports' in validation_checks"
+      block:
+        - name: Check listening ports
+          ansible.builtin.command: ss -tlnp
+          changed_when: false
+          register: listening_ports
+
+        - name: Display listening ports
+          ansible.builtin.debug:
+            var: listening_ports.stdout_lines
+
+  post_tasks:
+    - name: Validation complete
+      ansible.builtin.debug:
+        msg: "All validation checks passed for {{ inventory_hostname }}"

@@ -1,0 +1,81 @@
+---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  when: ansible_os_family == 'Debian'
+
+- name: Install prerequisites for Node.js
+  ansible.builtin.apt:
+    name:
+      - curl
+      - gnupg
+      - ca-certificates
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Install Node.js repository (Debian/Ubuntu)
+  ansible.builtin.shell: |
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+  args:
+    creates: /etc/apt/sources.list.d/nodesource.list
+  when: ansible_os_family == 'Debian'
+
+- name: Update apt cache after adding repo
+  ansible.builtin.apt:
+    update_cache: true
+  when: ansible_os_family == 'Debian'
+
+- name: Install Node.js
+  ansible.builtin.package:
+    name: nodejs
+    state: present
+
+- name: Create azurite group
+  ansible.builtin.group:
+    name: "{{ azurite_group }}"
+    system: true
+    state: present
+
+- name: Create azurite user
+  ansible.builtin.user:
+    name: "{{ azurite_user }}"
+    group: "{{ azurite_group }}"
+    system: true
+    shell: /usr/sbin/nologin
+    home: "{{ azurite_data_dir }}"
+    create_home: false
+
+- name: Create azurite directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ azurite_user }}"
+    group: "{{ azurite_group }}"
+    mode: '0755'
+  loop:
+    - "{{ azurite_install_dir }}"
+    - "{{ azurite_data_dir }}"
+
+- name: Install Azurite globally via npm
+  ansible.builtin.npm:
+    name: azurite
+    global: true
+    state: present
+  environment:
+    PATH: "/usr/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+
+- name: Create azurite systemd service
+  ansible.builtin.template:
+    src: azurite.service.j2
+    dest: /etc/systemd/system/azurite.service
+    mode: '0644'
+  notify:
+    - Reload systemd
+    - Restart azurite
+
+- name: Start and enable azurite
+  ansible.builtin.service:
+    name: azurite
+    state: "{{ azurite_service_state }}"
+    enabled: "{{ azurite_service_enabled }}"

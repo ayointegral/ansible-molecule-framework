@@ -1,0 +1,57 @@
+---
+# Molecule converge playbook for common/base
+# Simplified for container testing - skips tasks not suitable for containers
+
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    # Update apt cache for Debian-based systems
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == 'Debian'
+
+    # Override variables that cause issues in containers
+    - name: Set container-safe variables
+      ansible.builtin.set_fact:
+        # Skip timezone (tzdata may not be configured)
+        base_timezone: null
+        # Skip locale config
+        base_locales: []
+        # Use minimal package list (avoid curl conflict on Rocky)
+        base_packages:
+          - tar
+          - gzip
+
+  vars:
+    # Skip network/hostname changes in containers
+    base_set_hostname: false
+    base_manage_hosts_file: false
+    
+    # Skip NTP and SSH in containers
+    base_configure_ntp: false
+    base_configure_ssh: false
+    
+    # Skip sysctl (not writable in containers)
+    base_sysctl_params: []
+    
+    # Skip resource limits in containers (can cause issues)
+    base_limits: []
+    
+    # Keep directories - this should work
+    base_directories:
+      - path: /opt/ansible
+        owner: root
+        group: root
+        mode: '0755'
+      - path: /var/log/ansible
+        owner: root
+        group: root
+        mode: '0755'
+
+  roles:
+    - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"

@@ -1,0 +1,30 @@
+---
+# Converge playbook for postgresql role
+# Container-safe configuration
+
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    # Use distro packages instead of official repo (simpler for containers)
+    postgresql_use_official_repo: false
+    postgresql_databases:
+      - name: testdb
+        owner: postgres
+
+    postgresql_users:
+      - name: testuser
+        password: testpassword123
+        role_attr_flags: LOGIN,CREATEDB
+
+  pre_tasks:
+    - name: Update apt cache (Debian/Ubuntu)
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 600
+      when: ansible_os_family == 'Debian'
+
+  roles:
+    - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"

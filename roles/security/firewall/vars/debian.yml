@@ -1,0 +1,31 @@
+---
+# Debian/Ubuntu specific variables
+
+firewall_packages:
+  firewalld:
+    - firewalld
+  iptables:
+    - iptables
+    - iptables-persistent
+    - netfilter-persistent
+  ufw:
+    - ufw
+
+firewall_services:
+  firewalld: firewalld
+  iptables: netfilter-persistent
+  ufw: ufw
+
+# Default backend preference order for Debian
+firewall_backend_preference:
+  - ufw
+  - firewalld
+  - iptables
+
+# Iptables save location
+firewall_iptables_rules_file: /etc/iptables/rules.v4
+firewall_ip6tables_rules_file: /etc/iptables/rules.v6
+
+# UFW configuration
+firewall_ufw_defaults_file: /etc/default/ufw
+firewall_ufw_rules_file: /etc/ufw/user.rules

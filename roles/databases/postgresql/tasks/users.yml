@@ -1,0 +1,29 @@
+---
+# User creation tasks for postgresql role
+
+- name: Create PostgreSQL users
+  become: true
+  become_user: postgres
+  community.postgresql.postgresql_user:
+    name: "{{ item.name }}"
+    password: "{{ item.password | default(omit) }}"
+    role_attr_flags: "{{ item.role_attr_flags | default('LOGIN') }}"
+    state: present
+  loop: "{{ postgresql_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  no_log: true
+
+- name: Grant database privileges to users
+  become: true
+  become_user: postgres
+  community.postgresql.postgresql_privs:
+    database: "{{ item.db }}"
+    role: "{{ item.name }}"
+    type: database
+    privs: "{{ item.priv | default('ALL') }}"
+    state: present
+  loop: "{{ postgresql_users }}"
+  loop_control:
+    label: "{{ item.name }} on {{ item.db | default('N/A') }}"
+  when: item.db is defined

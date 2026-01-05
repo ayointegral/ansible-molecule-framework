@@ -1,0 +1,40 @@
+---
+- name: Verify Windows Features Installation
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Check if Telnet-Client feature is installed
+      ansible.windows.win_powershell:
+        script: |
+          (Get-WindowsFeature -Name Telnet-Client).Installed
+      register: telnet_feature
+
+    - name: Assert Telnet-Client feature is installed (if in test vars)
+      ansible.builtin.assert:
+        that:
+          - telnet_feature.output[0] == true
+        fail_msg: "Telnet-Client feature is not installed"
+        success_msg: "Telnet-Client feature is installed"
+      when: windows_features_install is defined and 'Telnet-Client' in windows_features_install
+
+    - name: Check installed Windows features
+      ansible.windows.win_powershell:
+        script: |
+          Get-WindowsFeature | Where-Object { $_.Installed -eq $true } | Select-Object -ExpandProperty Name
+      register: installed_features
+
+    - name: Display installed features
+      ansible.builtin.debug:
+        msg: "Installed features count: {{ installed_features.output | length }}"
+
+    - name: Verify Windows feature service is running
+      ansible.windows.win_service:
+        name: TrustedInstaller
+      register: trusted_installer
+
+    - name: Assert Windows Modules Installer service exists
+      ansible.builtin.assert:
+        that:
+          - trusted_installer.exists
+        fail_msg: "TrustedInstaller service does not exist"
+        success_msg: "TrustedInstaller service exists"

@@ -1,0 +1,24 @@
+---
+- name: Verify - Multi-platform
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Display distribution info
+      ansible.builtin.debug:
+        msg: "{{ ansible_distribution }} {{ ansible_distribution_version }} ({{ ansible_os_family }})"
+
+    - name: Check base packages installed
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: present
+      check_mode: true
+      register: pkg_check
+      loop:
+        - curl
+        - wget
+      failed_when: pkg_check.changed
+
+    - name: Verify system configuration
+      ansible.builtin.debug:
+        msg: "System {{ inventory_hostname }} verified successfully"

@@ -1,0 +1,59 @@
+---
+- name: Remove old Docker packages
+  ansible.builtin.yum:
+    name:
+      - docker
+      - docker-client
+      - docker-client-latest
+      - docker-common
+      - docker-latest
+      - docker-latest-logrotate
+      - docker-logrotate
+      - docker-engine
+    state: absent
+
+- name: Install required packages for Docker repository
+  ansible.builtin.yum:
+    name:
+      - yum-utils
+      - device-mapper-persistent-data
+      - lvm2
+      - python3-pip
+    state: present
+
+- name: Add Docker repository
+  ansible.builtin.yum_repository:
+    name: docker-ce-{{ docker_channel }}
+    description: Docker CE {{ docker_channel | capitalize }} - $basearch
+    baseurl: "https://download.docker.com/linux/{{ (ansible_distribution == 'Fedora') | ternary('fedora', 'centos') }}/$releasever/$basearch/{{ docker_channel }}"
+    gpgcheck: true
+    gpgkey: "https://download.docker.com/linux/{{ (ansible_distribution == 'Fedora') | ternary('fedora', 'centos') }}/gpg"
+    enabled: true
+  when: docker_add_repo
+
+- name: Install Docker CE packages (specific version)
+  ansible.builtin.yum:
+    name:
+      - "docker-ce-{{ docker_version }}"
+      - "docker-ce-cli-{{ docker_version }}"
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+  when: docker_version != "latest"
+
+- name: Install Docker CE packages (latest version)
+  ansible.builtin.yum:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+  when: docker_version == "latest"
+
+- name: Install Docker Python library
+  ansible.builtin.pip:
+    name: docker
+    state: present

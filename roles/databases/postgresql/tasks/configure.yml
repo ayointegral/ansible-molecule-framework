@@ -1,0 +1,63 @@
+---
+# Configuration tasks for postgresql role
+
+- name: Detect installed PostgreSQL version (Debian/Ubuntu with distro packages)
+  ansible.builtin.shell: ls /etc/postgresql/ | sort -rV | head -1
+  register: _detected_pg_version
+  changed_when: false
+  when:
+    - ansible_os_family == 'Debian'
+    - not (postgresql_use_official_repo | default(true))
+
+- name: Set PostgreSQL version from detected (distro packages)
+  ansible.builtin.set_fact:
+    postgresql_version: "{{ _detected_pg_version.stdout }}"
+    postgresql_config_dir: "/etc/postgresql/{{ _detected_pg_version.stdout }}/main"
+    postgresql_data_dir: "/var/lib/postgresql/{{ _detected_pg_version.stdout }}/main"
+  when:
+    - ansible_os_family == 'Debian'
+    - not (postgresql_use_official_repo | default(true))
+    - _detected_pg_version.stdout | length > 0
+
+- name: Set PostgreSQL config directory (RedHat with official repo)
+  ansible.builtin.set_fact:
+    postgresql_config_dir: "/var/lib/pgsql/{{ postgresql_version }}/data"
+    postgresql_data_dir: "/var/lib/pgsql/{{ postgresql_version }}/data"
+  when:
+    - ansible_os_family == 'RedHat'
+    - postgresql_use_official_repo | default(true)
+
+- name: Set PostgreSQL config directory (RedHat with distro)
+  ansible.builtin.set_fact:
+    postgresql_config_dir: "/var/lib/pgsql/data"
+    postgresql_data_dir: "/var/lib/pgsql/data"
+  when:
+    - ansible_os_family == 'RedHat'
+    - not (postgresql_use_official_repo | default(true))
+
+- name: Configure postgresql.conf
+  ansible.builtin.template:
+    src: postgresql.conf.j2
+    dest: "{{ postgresql_config_dir }}/postgresql.conf"
+    owner: postgres
+    group: postgres
+    mode: '0600'
+  notify: Restart postgresql
+
+- name: Configure pg_hba.conf
+  ansible.builtin.template:
+    src: pg_hba.conf.j2
+    dest: "{{ postgresql_config_dir }}/pg_hba.conf"
+    owner: postgres
+    group: postgres
+    mode: '0600'
+  notify: Reload postgresql
+
+- name: Ensure log directory exists
+  ansible.builtin.file:
+    path: "{{ postgresql_log_dir }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: '0755'
+  when: postgresql_logging_collector

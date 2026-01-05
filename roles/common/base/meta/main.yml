@@ -1,0 +1,35 @@
+---
+# Role metadata
+
+galaxy_info:
+  role_name: base
+  namespace: molecule_framework
+  author: Ansible Molecule Framework
+  description: Base system configuration role
+  company: Example Corp
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - focal
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+    - name: Fedora
+      versions:
+        - "38"
+        - "39"
+  galaxy_tags:
+    - system
+    - base
+    - configuration
+    - security
+
+dependencies: []

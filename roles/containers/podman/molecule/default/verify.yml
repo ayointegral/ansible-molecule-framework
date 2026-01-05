@@ -1,0 +1,122 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Check if Podman is installed
+      ansible.builtin.command: which podman
+      register: podman_binary
+      changed_when: false
+      failed_when: podman_binary.rc != 0
+
+    - name: Get Podman version
+      ansible.builtin.command: podman --version
+      register: podman_version
+      changed_when: false
+
+    - name: Display Podman version
+      ansible.builtin.debug:
+        msg: "{{ podman_version.stdout }}"
+
+    - name: Check registries.conf exists
+      ansible.builtin.stat:
+        path: /etc/containers/registries.conf
+      register: registries_conf
+
+    - name: Verify registries.conf exists
+      ansible.builtin.assert:
+        that:
+          - registries_conf.stat.exists
+          - registries_conf.stat.mode == '0644'
+        fail_msg: "registries.conf does not exist or has wrong permissions"
+        success_msg: "registries.conf exists with correct permissions"
+
+    - name: Check storage.conf exists
+      ansible.builtin.stat:
+        path: /etc/containers/storage.conf
+      register: storage_conf
+
+    - name: Verify storage.conf exists
+      ansible.builtin.assert:
+        that:
+          - storage_conf.stat.exists
+          - storage_conf.stat.mode == '0644'
+        fail_msg: "storage.conf does not exist or has wrong permissions"
+        success_msg: "storage.conf exists with correct permissions"
+
+    - name: Read registries.conf content
+      ansible.builtin.slurp:
+        src: /etc/containers/registries.conf
+      register: registries_content
+
+    - name: Verify registries.conf contains expected content
+      ansible.builtin.assert:
+        that:
+          - "'docker.io' in (registries_content.content | b64decode)"
+          - "'quay.io' in (registries_content.content | b64decode)"
+        fail_msg: "registries.conf does not contain expected registries"
+        success_msg: "registries.conf contains expected registries"
+
+    - name: Read storage.conf content
+      ansible.builtin.slurp:
+        src: /etc/containers/storage.conf
+      register: storage_content
+
+    - name: Verify storage.conf contains expected content
+      ansible.builtin.assert:
+        that:
+          - "'overlay' in (storage_content.content | b64decode)"
+        fail_msg: "storage.conf does not contain expected storage driver"
+        success_msg: "storage.conf contains overlay driver configuration"
+
+    - name: Check if user namespaces sysctl is configured
+      ansible.builtin.command: sysctl user.max_user_namespaces
+      register: userns_sysctl
+      changed_when: false
+      failed_when: false
+
+    - name: Verify user namespaces are enabled
+      ansible.builtin.assert:
+        that:
+          - "'28633' in userns_sysctl.stdout or userns_sysctl.rc != 0"
+        fail_msg: "User namespaces not configured correctly"
+        success_msg: "User namespaces configured or sysctl not available in container"
+      when: userns_sysctl.rc == 0
+
+    - name: Check containers directory exists
+      ansible.builtin.stat:
+        path: /etc/containers
+      register: containers_dir
+
+    - name: Verify containers directory
+      ansible.builtin.assert:
+        that:
+          - containers_dir.stat.exists
+          - containers_dir.stat.isdir
+          - containers_dir.stat.mode == '0755'
+        fail_msg: "/etc/containers directory does not exist or has wrong permissions"
+        success_msg: "/etc/containers directory exists with correct permissions"
+
+    - name: Test Podman info command
+      ansible.builtin.command: podman info --format json
+      register: podman_info
+      changed_when: false
+      failed_when: false
+
+    - name: Display Podman storage driver
+      ansible.builtin.debug:
+        msg: "Podman info retrieved successfully"
+      when: podman_info.rc == 0
+
+    - name: Verify Podman can run (check only, may fail in unprivileged container)
+      ansible.builtin.command: podman ps
+      register: podman_ps
+      changed_when: false
+      failed_when: false
+
+    - name: Report Podman operational status
+      ansible.builtin.debug:
+        msg: >-
+          Podman ps command {{ 'succeeded' if podman_ps.rc == 0 else 'failed (expected in unprivileged containers)' }}

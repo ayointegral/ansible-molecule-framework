@@ -1,0 +1,25 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Check prometheus binary exists
+      ansible.builtin.stat:
+        path: /usr/local/bin/prometheus
+      register: prom_bin
+
+    - name: Assert prometheus binary exists
+      ansible.builtin.assert:
+        that: prom_bin.stat.exists
+        fail_msg: "Prometheus binary not found"
+
+    - name: Check prometheus config exists
+      ansible.builtin.stat:
+        path: /etc/prometheus/prometheus.yml
+      register: prom_config
+
+    - name: Assert prometheus config exists
+      ansible.builtin.assert:
+        that: prom_config.stat.exists
+        fail_msg: "Prometheus config not found"

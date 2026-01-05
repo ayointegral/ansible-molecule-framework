@@ -1,0 +1,72 @@
+---
+# Configuration playbook - applies configuration to systems
+# Can be run multiple times (idempotent)
+
+- name: System configuration
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    configure_web: false
+    configure_database: false
+    configure_monitoring: false
+    configure_security: true
+
+  pre_tasks:
+    - name: Display configuration targets
+      ansible.builtin.debug:
+        msg: |
+          Configuration targets for {{ inventory_hostname }}:
+          - Web: {{ configure_web }}
+          - Database: {{ configure_database }}
+          - Monitoring: {{ configure_monitoring }}
+          - Security: {{ configure_security }}
+
+  tasks:
+    - name: Security configuration
+      when: configure_security | bool
+      block:
+        - name: Apply firewall role
+          ansible.builtin.include_role:
+            name: security/firewall
+          when: firewall_enabled | default(true)
+
+    - name: Web tier configuration
+      when: configure_web | bool
+      block:
+        - name: Apply nginx role
+          ansible.builtin.include_role:
+            name: web/nginx
+          when: "'nginx' in web_servers | default([])"
+
+        - name: Apply haproxy role
+          ansible.builtin.include_role:
+            name: web/haproxy
+          when: "'haproxy' in web_servers | default([])"
+
+    - name: Database configuration
+      when: configure_database | bool
+      block:
+        - name: Apply postgresql role
+          ansible.builtin.include_role:
+            name: databases/postgresql
+          when: "'postgresql' in databases | default([])"
+
+        - name: Apply redis role
+          ansible.builtin.include_role:
+            name: databases/redis
+          when: "'redis' in databases | default([])"
+
+    - name: Monitoring configuration
+      when: configure_monitoring | bool
+      block:
+        - name: Apply prometheus role
+          ansible.builtin.include_role:
+            name: monitoring/prometheus
+          when: prometheus_enabled | default(false)
+
+  post_tasks:
+    - name: Configuration complete
+      ansible.builtin.debug:
+        msg: "Configuration completed for {{ inventory_hostname }}"

@@ -1,0 +1,18 @@
+---
+# Shared environment group variables
+
+# Monitoring Configuration
+prometheus_retention_days: 30
+grafana_admin_password: "{{ vault_grafana_admin_password | default('changeme') }}"
+
+# Logging Configuration
+elasticsearch_heap_size: 2g
+log_retention_days: 90
+
+# CI/CD Configuration
+jenkins_admin_user: admin
+nexus_admin_password: "{{ vault_nexus_admin_password | default('changeme') }}"
+
+# Common shared settings
+shared_backup_enabled: true
+shared_monitoring_enabled: true

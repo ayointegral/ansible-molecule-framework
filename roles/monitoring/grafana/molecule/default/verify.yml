@@ -1,0 +1,63 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Check Grafana package is installed
+      ansible.builtin.package:
+        name: grafana
+        state: present
+      check_mode: true
+      register: grafana_pkg
+
+    - name: Assert Grafana is installed
+      ansible.builtin.assert:
+        that: not grafana_pkg.changed
+        fail_msg: "Grafana package is not installed"
+
+    - name: Check Grafana configuration exists
+      ansible.builtin.stat:
+        path: /etc/grafana/grafana.ini
+      register: grafana_config
+
+    - name: Assert Grafana config exists
+      ansible.builtin.assert:
+        that: grafana_config.stat.exists
+        fail_msg: "Grafana configuration file does not exist"
+
+    - name: Check datasources provisioning file
+      ansible.builtin.stat:
+        path: /etc/grafana/provisioning/datasources/datasources.yml
+      register: datasources_file
+
+    - name: Assert datasources file exists
+      ansible.builtin.assert:
+        that: datasources_file.stat.exists
+        fail_msg: "Datasources provisioning file does not exist"
+
+    - name: Check Grafana service is running
+      ansible.builtin.service:
+        name: grafana-server
+        state: started
+      check_mode: true
+      register: grafana_svc
+
+    - name: Assert Grafana service is running
+      ansible.builtin.assert:
+        that: not grafana_svc.changed
+        fail_msg: "Grafana service is not running"
+
+    - name: Wait for Grafana to be ready
+      ansible.builtin.uri:
+        url: "http://localhost:3000/api/health"
+        status_code: 200
+      register: grafana_health
+      retries: 10
+      delay: 5
+      until: grafana_health.status == 200
+
+    - name: Assert Grafana is healthy
+      ansible.builtin.assert:
+        that: grafana_health.status == 200
+        fail_msg: "Grafana health check failed"

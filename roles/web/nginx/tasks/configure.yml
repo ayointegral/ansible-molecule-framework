@@ -1,0 +1,70 @@
+---
+# Nginx configuration tasks
+
+- name: Deploy main nginx.conf
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: "{{ nginx_conf_dir }}/nginx.conf"
+    owner: root
+    group: root
+    mode: '0644'
+    validate: 'nginx -t -c %s'
+  notify: Reload nginx
+
+- name: Remove default vhost if configured
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ nginx_vhost_enabled_dir }}/default"
+    - "{{ nginx_vhost_dir }}/default"
+    - "{{ nginx_conf_d_dir }}/default.conf"
+  when: nginx_remove_default_vhost
+  notify: Reload nginx
+
+- name: Deploy virtual host configurations
+  ansible.builtin.template:
+    src: vhost.conf.j2
+    dest: "{{ nginx_vhost_dir }}/{{ item.server_name | default('default') }}.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  loop: "{{ nginx_vhosts }}"
+  notify: Reload nginx
+  when: nginx_vhosts | length > 0
+
+- name: Enable virtual hosts
+  ansible.builtin.file:
+    src: "{{ nginx_vhost_dir }}/{{ item.server_name | default('default') }}.conf"
+    dest: "{{ nginx_vhost_enabled_dir }}/{{ item.server_name | default('default') }}.conf"
+    state: link
+  loop: "{{ nginx_vhosts }}"
+  notify: Reload nginx
+  when:
+    - nginx_vhosts | length > 0
+    - ansible_os_family == 'Debian'
+
+- name: Deploy virtual hosts to conf.d (RHEL-style)
+  ansible.builtin.template:
+    src: vhost.conf.j2
+    dest: "{{ nginx_conf_d_dir }}/{{ item.server_name | default('default') }}.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  loop: "{{ nginx_vhosts }}"
+  notify: Reload nginx
+  when:
+    - nginx_vhosts | length > 0
+    - ansible_os_family == 'RedHat'
+
+- name: Ensure web root directories exist
+  ansible.builtin.file:
+    path: "{{ item.root }}"
+    state: directory
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_user }}"
+    mode: '0755'
+  loop: "{{ nginx_vhosts }}"
+  when:
+    - nginx_vhosts | length > 0
+    - item.root is defined

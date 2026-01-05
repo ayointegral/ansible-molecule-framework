@@ -1,0 +1,38 @@
+---
+- name: Verify disk_management role
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Check if parted is installed
+      ansible.builtin.command: which parted
+      register: parted_check
+      changed_when: false
+      failed_when: false
+
+    - name: Verify parted is available
+      ansible.builtin.assert:
+        that:
+          - parted_check.rc == 0
+        fail_msg: "parted command not found"
+        success_msg: "parted is installed and available"
+
+    - name: Check for loopback test image
+      ansible.builtin.stat:
+        path: /tmp/loop_test.img
+      register: loop_image
+
+    - name: Display loopback image status
+      ansible.builtin.debug:
+        msg: >-
+          Loopback image: {{ 'EXISTS' if loop_image.stat.exists else 'NOT FOUND' }}
+          (expected in container environment)
+
+    - name: Verify role completed successfully
+      ansible.builtin.debug:
+        msg: |
+          Disk Management Role Verification Summary:
+          - parted: {{ 'INSTALLED' if parted_check.rc == 0 else 'NOT INSTALLED' }}
+          - Loopback image: {{ 'CREATED' if loop_image.stat.exists else 'NOT CREATED (may be expected)' }}
+          - Role execution: SUCCESSFUL

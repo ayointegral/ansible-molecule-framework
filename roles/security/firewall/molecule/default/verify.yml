@@ -1,0 +1,221 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    # Common verification tasks
+    - name: Gather service facts
+      ansible.builtin.service_facts:
+
+    # UFW verification (Ubuntu/Debian)
+    - name: Verify UFW on Debian-based systems
+      when: ansible_os_family == 'Debian'
+      block:
+        - name: Check UFW status
+          ansible.builtin.command: ufw status verbose
+          register: ufw_status
+          changed_when: false
+
+        - name: Verify UFW is active
+          ansible.builtin.assert:
+            that:
+              - "'Status: active' in ufw_status.stdout"
+            fail_msg: "UFW is not active"
+            success_msg: "UFW is active"
+
+        - name: Verify default incoming policy is deny
+          ansible.builtin.assert:
+            that:
+              - "'Default: deny (incoming)' in ufw_status.stdout"
+            fail_msg: "Default incoming policy is not deny"
+            success_msg: "Default incoming policy is deny"
+
+        - name: Verify SSH port is open
+          ansible.builtin.assert:
+            that:
+              - "'22/tcp' in ufw_status.stdout"
+            fail_msg: "SSH port 22 is not allowed"
+            success_msg: "SSH port 22 is allowed"
+
+        - name: Verify HTTP port is open
+          ansible.builtin.assert:
+            that:
+              - "'80/tcp' in ufw_status.stdout"
+            fail_msg: "HTTP port 80 is not allowed"
+            success_msg: "HTTP port 80 is allowed"
+
+        - name: Verify HTTPS port is open
+          ansible.builtin.assert:
+            that:
+              - "'443/tcp' in ufw_status.stdout"
+            fail_msg: "HTTPS port 443 is not allowed"
+            success_msg: "HTTPS port 443 is allowed"
+
+        - name: Check UFW numbered rules
+          ansible.builtin.command: ufw status numbered
+          register: ufw_numbered
+          changed_when: false
+
+        - name: Debug UFW rules
+          ansible.builtin.debug:
+            var: ufw_numbered.stdout_lines
+
+    # Firewalld verification (RedHat/CentOS)
+    - name: Verify firewalld on RedHat-based systems
+      when: ansible_os_family == 'RedHat'
+      block:
+        - name: Check firewalld service is running
+          ansible.builtin.assert:
+            that:
+              - "'firewalld.service' in ansible_facts.services"
+              - "ansible_facts.services['firewalld.service'].state == 'running'"
+            fail_msg: "firewalld service is not running"
+            success_msg: "firewalld service is running"
+
+        - name: Get firewalld state
+          ansible.builtin.command: firewall-cmd --state
+          register: firewalld_state
+          changed_when: false
+
+        - name: Verify firewalld is running
+          ansible.builtin.assert:
+            that:
+              - "'running' in firewalld_state.stdout"
+            fail_msg: "firewalld is not running"
+            success_msg: "firewalld is running"
+
+        - name: Get default zone
+          ansible.builtin.command: firewall-cmd --get-default-zone
+          register: default_zone
+          changed_when: false
+
+        - name: Verify default zone
+          ansible.builtin.assert:
+            that:
+              - "'public' in default_zone.stdout"
+            fail_msg: "Default zone is not public"
+            success_msg: "Default zone is public"
+
+        - name: List open ports in default zone
+          ansible.builtin.command: firewall-cmd --zone=public --list-ports
+          register: open_ports
+          changed_when: false
+
+        - name: Verify SSH port is open
+          ansible.builtin.assert:
+            that:
+              - "'22/tcp' in open_ports.stdout"
+            fail_msg: "SSH port 22 is not open"
+            success_msg: "SSH port 22 is open"
+
+        - name: Verify HTTP port is open
+          ansible.builtin.assert:
+            that:
+              - "'80/tcp' in open_ports.stdout"
+            fail_msg: "HTTP port 80 is not open"
+            success_msg: "HTTP port 80 is open"
+
+        - name: Verify HTTPS port is open
+          ansible.builtin.assert:
+            that:
+              - "'443/tcp' in open_ports.stdout"
+            fail_msg: "HTTPS port 443 is not open"
+            success_msg: "HTTPS port 443 is open"
+
+        - name: List rich rules
+          ansible.builtin.command: firewall-cmd --zone=public --list-rich-rules
+          register: rich_rules
+          changed_when: false
+
+        - name: Debug rich rules
+          ansible.builtin.debug:
+            var: rich_rules.stdout_lines
+
+        - name: Verify source IP rule exists
+          ansible.builtin.assert:
+            that:
+              - "'10.10.10.0/24' in rich_rules.stdout"
+            fail_msg: "Source IP rich rule not found"
+            success_msg: "Source IP rich rule exists"
+
+        - name: List permanent configuration
+          ansible.builtin.command: firewall-cmd --permanent --zone=public --list-all
+          register: permanent_config
+          changed_when: false
+
+        - name: Debug permanent configuration
+          ansible.builtin.debug:
+            var: permanent_config.stdout_lines
+
+    # Network connectivity tests
+    - name: Verify network connectivity tests
+      block:
+        - name: Check if ping is available
+          ansible.builtin.command: which ping
+          register: ping_available
+          changed_when: false
+          failed_when: false
+
+        - name: Test that localhost is reachable
+          ansible.builtin.command: ping -c 1 127.0.0.1
+          register: ping_localhost
+          changed_when: false
+          when: ping_available.rc == 0
+
+        - name: Verify localhost ping succeeded
+          ansible.builtin.assert:
+            that:
+              - ping_localhost.rc == 0
+            fail_msg: "Cannot ping localhost"
+            success_msg: "Localhost is reachable"
+          when: ping_available.rc == 0
+
+        - name: Skip ping test (ping not available in container)
+          ansible.builtin.debug:
+            msg: "Skipping ping test - ping utility not available in container"
+          when: ping_available.rc != 0
+
+    # Verify persistence
+    - name: Verify rules persistence (UFW)
+      when: ansible_os_family == 'Debian'
+      block:
+        - name: Check if UFW rules file exists
+          ansible.builtin.stat:
+            path: /etc/ufw/user.rules
+          register: ufw_rules_file
+
+        - name: Verify UFW rules file exists
+          ansible.builtin.assert:
+            that:
+              - ufw_rules_file.stat.exists
+            fail_msg: "UFW rules file does not exist"
+            success_msg: "UFW rules file exists"
+
+    - name: Verify rules persistence (firewalld)
+      when: ansible_os_family == 'RedHat'
+      block:
+        - name: Check permanent ports
+          ansible.builtin.command: firewall-cmd --permanent --zone=public --list-ports
+          register: permanent_ports
+          changed_when: false
+
+        - name: Verify permanent rules exist
+          ansible.builtin.assert:
+            that:
+              - "'22/tcp' in permanent_ports.stdout"
+              - "'80/tcp' in permanent_ports.stdout"
+              - "'443/tcp' in permanent_ports.stdout"
+            fail_msg: "Permanent rules are not properly saved"
+            success_msg: "Permanent rules are properly saved"
+
+    # Summary
+    - name: Display verification summary
+      ansible.builtin.debug:
+        msg: |
+          Firewall Verification Summary:
+          ==============================
+          OS Family: {{ ansible_os_family }}
+          Backend: {{ 'UFW' if ansible_os_family == 'Debian' else 'firewalld' }}
+          Status: All verifications passed

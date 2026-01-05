@@ -1,0 +1,19 @@
+---
+# fake-gcs-server based GCS simulation
+fake_gcs_version: "1.45.2"
+fake_gcs_user: gcs
+fake_gcs_group: gcs
+fake_gcs_install_dir: /opt/fake-gcs-server
+fake_gcs_data_dir: /var/lib/fake-gcs
+
+fake_gcs_listen_address: "0.0.0.0"
+fake_gcs_port: 4443
+fake_gcs_public_host: "localhost:4443"
+fake_gcs_scheme: "http"
+
+# Initial buckets
+fake_gcs_buckets: []
+  # - test-bucket
+
+fake_gcs_service_enabled: true
+fake_gcs_service_state: started

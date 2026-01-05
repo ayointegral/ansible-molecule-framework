@@ -1,0 +1,81 @@
+---
+# tasks/server.yml - NFS server configuration tasks
+
+- name: Install NFS server packages
+  ansible.builtin.package:
+    name: "{{ _nfs_server_packages }}"
+    state: present
+  become: true
+
+- name: Ensure rpcbind is enabled and running
+  ansible.builtin.service:
+    name: "{{ nfs_rpcbind_service }}"
+    state: started
+    enabled: true
+  become: true
+  when: nfs_version < 4 or ansible_os_family == 'RedHat'
+
+- name: Create export directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | default('nobody') }}"
+    group: "{{ item.group | default('nogroup' if ansible_os_family == 'Debian' else 'nobody') }}"
+    mode: "{{ item.mode | default('0755') }}"
+  loop: "{{ nfs_exports }}"
+  when: item.create | default(false)
+  become: true
+
+- name: Configure NFS exports
+  ansible.builtin.template:
+    src: exports.j2
+    dest: /etc/exports
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+  notify:
+    - Reload NFS exports
+
+- name: Configure NFSv4 idmapd
+  ansible.builtin.lineinfile:
+    path: /etc/idmapd.conf
+    regexp: "^#?\\s*Domain\\s*="
+    line: "Domain = {{ nfs_domain }}"
+    state: present
+  become: true
+  when:
+    - nfs_version >= 4
+    - nfs_idmapd_enabled
+  notify:
+    - Restart nfs-idmapd
+
+- name: Ensure NFS server service is enabled and running
+  ansible.builtin.service:
+    name: "{{ _nfs_server_service }}"
+    state: "{{ nfs_server_state }}"
+    enabled: "{{ nfs_server_enabled }}"
+  become: true
+
+- name: Configure firewall for NFS (firewalld)
+  when: nfs_configure_firewall
+  become: true
+  block:
+    - name: Check if firewalld is available
+      ansible.builtin.command: systemctl is-active firewalld
+      register: _firewalld_status
+      changed_when: false
+      failed_when: false
+
+    - name: Open NFS firewall ports
+      ansible.posix.firewalld:
+        service: "{{ item }}"
+        zone: "{{ nfs_firewall_zone }}"
+        permanent: true
+        immediate: true
+        state: enabled
+      loop:
+        - nfs
+        - rpc-bind
+        - mountd
+      when: _firewalld_status.rc == 0

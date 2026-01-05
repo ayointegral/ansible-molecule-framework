@@ -1,0 +1,39 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+
+  pre_tasks:
+    - name: Update apt cache (Debian/Ubuntu)
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == 'Debian'
+
+  vars:
+    # Test with custom registries
+    podman_registries:
+      search:
+        - docker.io
+        - quay.io
+        - ghcr.io
+      insecure: []
+      blocked: []
+
+    podman_unqualified_search_registries:
+      - docker.io
+      - quay.io
+
+    # Test storage configuration
+    podman_storage_driver: overlay
+    podman_configure_rootless: true
+
+    # Enable socket
+    podman_enable_socket: true
+
+    # Don't install additional packages in test (may not be available)
+    podman_additional_packages: []
+    podman_install_compose: false
+
+  roles:
+    - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"

@@ -1,0 +1,60 @@
+---
+# Azure Key Vault simulation role
+# Provides a mock Key Vault service for testing Azure integrations
+
+- name: Install required packages
+  ansible.builtin.package:
+    name:
+      - python3
+      - python3-pip
+    state: present
+
+- name: Install Python dependencies
+  ansible.builtin.pip:
+    name:
+      - flask
+      - cryptography
+    state: present
+    executable: pip3
+
+- name: Create Key Vault data directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ keyvault_data_dir }}"
+    - "{{ keyvault_data_dir }}/secrets"
+    - "{{ keyvault_data_dir }}/keys"
+    - "{{ keyvault_data_dir }}/certificates"
+    - "{{ keyvault_log_dir }}"
+
+- name: Create mock Key Vault service script
+  ansible.builtin.template:
+    src: keyvault-mock.py.j2
+    dest: /usr/local/bin/keyvault-mock
+    mode: '0755'
+
+- name: Create secrets data files
+  ansible.builtin.copy:
+    content: "{{ item.value }}"
+    dest: "{{ keyvault_data_dir }}/secrets/{{ item.name }}"
+    mode: '0600'
+  loop: "{{ keyvault_secrets }}"
+  when: keyvault_secrets | length > 0
+  no_log: true
+
+- name: Create Key Vault systemd service
+  ansible.builtin.template:
+    src: keyvault-mock.service.j2
+    dest: /etc/systemd/system/keyvault-mock.service
+    mode: '0644'
+  notify: Restart keyvault-mock
+
+- name: Ensure Key Vault mock service is started
+  ansible.builtin.systemd:
+    name: keyvault-mock
+    state: started
+    enabled: true
+    daemon_reload: true
+  when: keyvault_enabled

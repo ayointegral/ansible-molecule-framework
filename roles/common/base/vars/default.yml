@@ -1,0 +1,9 @@
+---
+# Default variables (fallback)
+
+base_ntp_package: chrony
+base_ntp_service: chronyd
+base_ntp_config_path: /etc/chrony.conf
+base_ntp_config_template: chrony.conf.j2
+
+base_ssh_service: sshd

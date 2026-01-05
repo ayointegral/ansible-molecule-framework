@@ -1,0 +1,25 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Check nodejs is installed
+      ansible.builtin.command: node --version
+      register: node_version
+      changed_when: false
+
+    - name: Assert nodejs is installed
+      ansible.builtin.assert:
+        that: node_version.rc == 0
+        fail_msg: "Node.js is not installed"
+
+    - name: Check azurite data directory exists
+      ansible.builtin.stat:
+        path: /var/lib/azurite
+      register: azurite_data
+
+    - name: Assert azurite data directory exists
+      ansible.builtin.assert:
+        that: azurite_data.stat.exists and azurite_data.stat.isdir
+        fail_msg: "Azurite data directory not found"

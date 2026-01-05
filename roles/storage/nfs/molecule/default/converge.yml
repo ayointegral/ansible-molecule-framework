@@ -1,0 +1,57 @@
+---
+# Converge playbook for nfs role
+# Container-safe configuration for NFS server testing with loopback mount
+
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    nfs_role: server
+    nfs_exports:
+      - path: /srv/nfs/data
+        hosts:
+          - name: "localhost"
+            options: "rw,sync,no_subtree_check,no_root_squash,insecure"
+          - name: "127.0.0.1"
+            options: "rw,sync,no_subtree_check,no_root_squash,insecure"
+        owner: nobody
+        group: "{{ 'nogroup' if ansible_os_family == 'Debian' else 'nobody' }}"
+        mode: "0755"
+        create: true
+    # Skip firewall configuration in containers
+    nfs_configure_firewall: false
+
+  pre_tasks:
+    - name: Update apt cache (Debian/Ubuntu)
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 600
+      when: ansible_os_family == 'Debian'
+
+  roles:
+    - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"
+
+  post_tasks:
+    - name: Create test file in NFS export
+      ansible.builtin.copy:
+        dest: /srv/nfs/data/testfile.txt
+        content: "NFS test file created by molecule"
+        mode: '0644'
+
+    - name: Attempt loopback NFS mount (may fail in containers without kernel NFS)
+      ansible.posix.mount:
+        path: /mnt/nfs_test
+        src: "localhost:/srv/nfs/data"
+        fstype: nfs
+        opts: "vers=4,soft,timeo=5,retrans=1"
+        state: mounted
+      register: nfs_mount_result
+      failed_when: false
+
+    - name: Display NFS mount result
+      ansible.builtin.debug:
+        msg: >-
+          NFS loopback mount {{ 'SUCCEEDED' if nfs_mount_result.changed else 'FAILED (expected in containers without kernel NFS support)' }}.
+          {{ nfs_mount_result.msg | default('') }}

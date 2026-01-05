@@ -1,0 +1,50 @@
+---
+# Provisioning playbook - initial system setup
+# This playbook runs one-time provisioning tasks
+
+- name: System provisioning
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    provision_tasks:
+      - base_system
+      - users
+      - packages
+
+  pre_tasks:
+    - name: Check if system is already provisioned
+      ansible.builtin.stat:
+        path: /etc/.provisioned
+      register: provisioned_marker
+
+    - name: Display provisioning status
+      ansible.builtin.debug:
+        msg: "System {{ 'already provisioned' if provisioned_marker.stat.exists else 'needs provisioning' }}"
+
+  tasks:
+    - name: Base system configuration
+      when: "'base_system' in provision_tasks"
+      block:
+        - name: Apply base role
+          ansible.builtin.include_role:
+            name: common/base
+
+    - name: Package installation
+      when: "'packages' in provision_tasks"
+      block:
+        - name: Apply packages role
+          ansible.builtin.include_role:
+            name: common/packages
+
+    - name: Mark system as provisioned
+      ansible.builtin.file:
+        path: /etc/.provisioned
+        state: touch
+        mode: '0644'
+
+  post_tasks:
+    - name: Provisioning complete
+      ansible.builtin.debug:
+        msg: "Provisioning completed for {{ inventory_hostname }}"

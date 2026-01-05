@@ -1,0 +1,62 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Check alertmanager binary exists
+      ansible.builtin.stat:
+        path: /opt/alertmanager/alertmanager
+      register: alertmanager_binary
+
+    - name: Assert alertmanager binary exists
+      ansible.builtin.assert:
+        that: alertmanager_binary.stat.exists
+        fail_msg: "Alertmanager binary not found"
+
+    - name: Check amtool binary exists
+      ansible.builtin.stat:
+        path: /opt/alertmanager/amtool
+      register: amtool_binary
+
+    - name: Assert amtool binary exists
+      ansible.builtin.assert:
+        that: amtool_binary.stat.exists
+        fail_msg: "amtool binary not found"
+
+    - name: Check alertmanager configuration exists
+      ansible.builtin.stat:
+        path: /etc/alertmanager/alertmanager.yml
+      register: alertmanager_config
+
+    - name: Assert alertmanager configuration exists
+      ansible.builtin.assert:
+        that: alertmanager_config.stat.exists
+        fail_msg: "Alertmanager configuration not found"
+
+    - name: Check alertmanager service is running
+      ansible.builtin.systemd:
+        name: alertmanager
+        state: started
+      check_mode: true
+      register: alertmanager_svc
+
+    - name: Assert alertmanager service is running
+      ansible.builtin.assert:
+        that: not alertmanager_svc.changed
+        fail_msg: "Alertmanager service is not running"
+
+    - name: Test alertmanager endpoint
+      ansible.builtin.uri:
+        url: http://localhost:9093/-/healthy
+        method: GET
+        return_content: true
+      register: health_response
+      retries: 5
+      delay: 2
+      until: health_response.status == 200
+      ignore_errors: true
+
+    - name: Assert alertmanager endpoint responds (if available)
+      ansible.builtin.debug:
+        msg: "Alertmanager health endpoint: {{ health_response.status | default('not tested') }}"

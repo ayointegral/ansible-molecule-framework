@@ -1,0 +1,43 @@
+# Python dependencies for Ansible Molecule Testing Framework
+# Install with: pip install -r requirements.txt
+
+# Core Ansible
+ansible-core>=2.15.0
+ansible>=8.0.0
+
+# Molecule and testing
+molecule>=6.0.0
+molecule-plugins[docker,podman]>=23.5.0
+pytest>=7.4.0
+pytest-ansible>=4.1.0
+pytest-testinfra>=10.0.0
+
+# Linting
+ansible-lint>=6.17.0
+yamllint>=1.32.0
+flake8>=6.1.0
+pylint>=2.17.0
+
+# Container drivers
+docker>=6.1.0
+podman>=4.6.0
+
+# Cloud SDKs (for simulation testing)
+boto3>=1.28.0
+azure-mgmt-compute>=30.0.0
+google-cloud-compute>=1.14.0
+
+# Utilities
+jmespath>=1.0.0
+netaddr>=0.8.0
+dnspython>=2.4.0
+passlib>=1.7.0
+
+# Reporting
+junit-xml>=1.9
+jinja2>=3.1.0
+
+# Development
+pre-commit>=3.4.0
+black>=23.7.0
+isort>=5.12.0

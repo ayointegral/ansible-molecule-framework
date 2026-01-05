@@ -1,0 +1,47 @@
+---
+# defaults/main.yml - Default variables for disk_management role
+
+# List of disks to manage
+disk_management_disks: []
+# Example:
+# disk_management_disks:
+#   - device: /dev/sdb
+#     partitions:
+#       - number: 1
+#         start: "0%"
+#         end: "50%"
+#         filesystem: ext4
+#         mount_point: /data1
+#         mount_options: "defaults,noatime"
+#       - number: 2
+#         start: "50%"
+#         end: "100%"
+#         filesystem: xfs
+#         mount_point: /data2
+#         mount_options: "defaults"
+
+# Loopback device configuration for testing
+disk_management_loopback_devices: []
+# Example:
+# disk_management_loopback_devices:
+#   - path: /tmp/disk1.img
+#     size_mb: 100
+#     device: /dev/loop10
+
+# Default filesystem type
+disk_management_default_filesystem: ext4
+
+# Default mount options
+disk_management_default_mount_options: "defaults"
+
+# Whether to update /etc/fstab
+disk_management_update_fstab: true
+
+# Whether to create mount points if they don't exist
+disk_management_create_mount_points: true
+
+# Partition table type (gpt or msdos)
+disk_management_partition_table: gpt
+
+# Force recreate partitions (destructive!)
+disk_management_force_partitions: false

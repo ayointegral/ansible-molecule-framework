@@ -1,0 +1,70 @@
+---
+# Main tasks for firewall role
+
+- name: Include OS-specific variables
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_os_family | lower }}.yml"
+    - "debian.yml"
+
+- name: Detect firewall backend
+  when: firewall_backend == 'auto'
+  block:
+    - name: Check for firewalld
+      ansible.builtin.command: which firewall-cmd
+      register: firewalld_check
+      changed_when: false
+      failed_when: false
+
+    - name: Check for ufw
+      ansible.builtin.command: which ufw
+      register: ufw_check
+      changed_when: false
+      failed_when: false
+
+    - name: Check for iptables
+      ansible.builtin.command: which iptables
+      register: iptables_check
+      changed_when: false
+      failed_when: false
+
+    - name: Set firewall backend based on detection
+      ansible.builtin.set_fact:
+        firewall_detected_backend: >-
+          {% if firewalld_check.rc == 0 %}firewalld
+          {% elif ufw_check.rc == 0 and ansible_os_family == 'Debian' %}ufw
+          {% elif iptables_check.rc == 0 %}iptables
+          {% else %}none{% endif %}
+
+    - name: Use detected backend
+      ansible.builtin.set_fact:
+        firewall_backend: "{{ firewall_detected_backend | trim }}"
+
+- name: Display detected firewall backend
+  ansible.builtin.debug:
+    msg: "Using firewall backend: {{ firewall_backend }}"
+
+- name: Install firewall packages
+  ansible.builtin.package:
+    name: "{{ firewall_packages[firewall_backend] }}"
+    state: present
+  when:
+    - firewall_backend != 'none'
+    - firewall_packages[firewall_backend] is defined
+
+- name: Include firewalld tasks
+  ansible.builtin.include_tasks: firewalld.yml
+  when: firewall_backend == 'firewalld'
+
+- name: Include iptables tasks
+  ansible.builtin.include_tasks: iptables.yml
+  when: firewall_backend == 'iptables'
+
+- name: Include ufw tasks
+  ansible.builtin.include_tasks: ufw.yml
+  when: firewall_backend == 'ufw'
+
+- name: Fail if no firewall backend available
+  ansible.builtin.fail:
+    msg: "No supported firewall backend detected or configured"
+  when: firewall_backend == 'none'

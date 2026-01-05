@@ -1,0 +1,29 @@
+---
+galaxy_info:
+  author: Ansible Molecule Testing
+  description: MySQL/MariaDB installation and configuration
+  company: Testing Framework
+  license: MIT
+  min_ansible_version: "2.12"
+  role_name: mysql
+  namespace: databases
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - focal
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+  galaxy_tags:
+    - database
+    - mysql
+    - mariadb
+    - sql
+
+dependencies: []

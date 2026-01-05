@@ -1,0 +1,89 @@
+---
+# Prepare playbook for NFS molecule testing
+# Attempts to load NFS kernel modules from host and set up loopback testing
+
+- name: Prepare NFS testing environment
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Update apt cache (Debian/Ubuntu)
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == 'Debian'
+
+    - name: Check if nfsd module is available
+      ansible.builtin.command: modprobe -n nfsd
+      register: nfsd_check
+      changed_when: false
+      failed_when: false
+
+    - name: Load NFS kernel modules (if available from host)
+      ansible.builtin.command: "modprobe {{ item }}"
+      loop:
+        - nfsd
+        - nfs
+        - nfsv4
+      register: modprobe_result
+      changed_when: false
+      failed_when: false
+      when: nfsd_check.rc == 0
+
+    - name: Set fact for NFS kernel support
+      ansible.builtin.set_fact:
+        nfs_kernel_available: "{{ nfsd_check.rc == 0 }}"
+
+    - name: Display NFS kernel support status
+      ansible.builtin.debug:
+        msg: >-
+          NFS kernel modules {{ 'ARE' if nfs_kernel_available else 'ARE NOT' }} available.
+          {{ 'Loopback NFS testing will work.' if nfs_kernel_available else 'exportfs will be mocked.' }}
+
+    - name: Create mock exportfs script (when kernel NFS not available)
+      ansible.builtin.copy:
+        dest: /usr/local/bin/exportfs-mock
+        content: |
+          #!/bin/bash
+          # Mock exportfs for container testing
+          echo "Mock exportfs: $@"
+          # Simulate success for common operations
+          case "$1" in
+            -ra|-r|-a|-v)
+              echo "/srv/nfs/data *(rw,sync,no_subtree_check)"
+              exit 0
+              ;;
+            *)
+              exit 0
+              ;;
+          esac
+        mode: '0755'
+      when: not nfs_kernel_available
+
+    - name: Replace exportfs with mock (when kernel NFS not available)
+      ansible.builtin.copy:
+        dest: /usr/sbin/exportfs
+        content: |
+          #!/bin/bash
+          # Mock exportfs for container testing without NFS kernel support
+          echo "Mock exportfs: $@" >&2
+          exit 0
+        mode: '0755'
+        force: false  # Don't replace if real exportfs exists
+      when: not nfs_kernel_available
+
+    - name: Create NFS export directory for testing
+      ansible.builtin.file:
+        path: /srv/nfs/data
+        state: directory
+        mode: '0755'
+        owner: nobody
+        group: nogroup
+      when: ansible_os_family == 'Debian'
+
+    - name: Create NFS mount point for loopback testing
+      ansible.builtin.file:
+        path: /mnt/nfs_test
+        state: directory
+        mode: '0755'

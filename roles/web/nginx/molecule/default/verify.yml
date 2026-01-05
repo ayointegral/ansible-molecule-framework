@@ -1,0 +1,72 @@
+---
+# Verify playbook for nginx role
+
+- name: Verify nginx installation
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Verify nginx package is installed
+      ansible.builtin.package:
+        name: nginx
+        state: present
+      check_mode: true
+      register: nginx_pkg
+      failed_when: nginx_pkg.changed
+
+    - name: Verify nginx service is running
+      ansible.builtin.service:
+        name: nginx
+        state: started
+      check_mode: true
+      register: nginx_svc
+      failed_when: nginx_svc.changed
+
+    - name: Verify nginx service is enabled
+      ansible.builtin.service:
+        name: nginx
+        enabled: true
+      check_mode: true
+      register: nginx_enabled
+      failed_when: nginx_enabled.changed
+
+    - name: Verify nginx is listening on port 80
+      ansible.builtin.wait_for:
+        port: 80
+        timeout: 10
+
+    - name: Verify nginx configuration syntax
+      ansible.builtin.command: nginx -t
+      register: nginx_test
+      changed_when: false
+      failed_when: nginx_test.rc != 0
+
+    - name: Test nginx responds to HTTP request
+      ansible.builtin.uri:
+        url: http://localhost/
+        return_content: true
+      register: nginx_response
+      failed_when: nginx_response.status != 200
+
+    - name: Verify nginx configuration directory exists
+      ansible.builtin.stat:
+        path: /etc/nginx
+      register: nginx_conf_dir
+      failed_when: not nginx_conf_dir.stat.exists
+
+    - name: Verify nginx.conf exists
+      ansible.builtin.stat:
+        path: /etc/nginx/nginx.conf
+      register: nginx_conf
+      failed_when: not nginx_conf.stat.exists
+
+    - name: Verify server_tokens is off in config
+      ansible.builtin.command: grep -q "server_tokens off" /etc/nginx/nginx.conf
+      register: tokens_check
+      changed_when: false
+      failed_when: tokens_check.rc != 0
+
+    - name: Display verification summary
+      ansible.builtin.debug:
+        msg: "All nginx verification checks passed!"

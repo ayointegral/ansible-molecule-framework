@@ -1,0 +1,21 @@
+---
+# RedHat/CentOS/Rocky specific variables
+
+base_ntp_package: chrony
+base_ntp_service: chronyd
+base_ntp_config_path: /etc/chrony.conf
+base_ntp_config_template: chrony.conf.j2
+
+base_ssh_service: sshd
+
+base_packages:
+  - vim-enhanced
+  - curl
+  - wget
+  - tar
+  - gzip
+  - unzip
+  - sudo
+  - ca-certificates
+  - yum-utils
+  - epel-release

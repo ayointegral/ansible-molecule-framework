@@ -1,0 +1,29 @@
+---
+# Windows Container Molecule Scenario
+# NOTE: Windows containers require a Windows host or special configuration
+# This scenario documents the intended configuration but may not work on all systems
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: windows-servercore
+    image: mcr.microsoft.com/windows/servercore:ltsc2022
+    pre_build_image: true
+    # Windows containers require:
+    # 1. Windows host with Docker Desktop
+    # 2. Docker Desktop configured for Windows containers
+    # 3. Hyper-V or WSL2 backend
+    # Note: This will NOT work on Linux/macOS hosts
+provisioner:
+  name: ansible
+  connection_options:
+    ansible_shell_type: powershell
+    ansible_become_method: runas
+  env:
+    ANSIBLE_ALLOW_BROKEN_CONDITIONALS: "true"
+  playbooks:
+    converge: converge.yml
+    verify: verify.yml
+verifier:
+  name: ansible

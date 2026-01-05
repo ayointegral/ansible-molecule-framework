@@ -1,0 +1,31 @@
+---
+galaxy_info:
+  role_name: lvm
+  namespace: storage
+  author: Ansible Molecule Testing Framework
+  description: Manage LVM physical volumes, volume groups, and logical volumes
+  license: MIT
+  min_ansible_version: "2.10"
+
+  platforms:
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+
+  galaxy_tags:
+    - lvm
+    - storage
+    - volume
+    - disk
+    - filesystem
+
+dependencies: []

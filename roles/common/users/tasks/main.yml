@@ -1,0 +1,97 @@
+---
+# User management tasks
+
+- name: Ensure required groups exist
+  ansible.builtin.group:
+    name: "{{ item.name }}"
+    gid: "{{ item.gid | default(omit) }}"
+    state: present
+    system: "{{ item.system | default(false) }}"
+  loop: "{{ user_groups }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Remove groups
+  ansible.builtin.group:
+    name: "{{ item.name }}"
+    state: absent
+  loop: "{{ groups_remove }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Create users
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    uid: "{{ item.uid | default(omit) }}"
+    group: "{{ item.group | default(omit) }}"
+    groups: "{{ item.groups | default([]) | join(',') }}"
+    append: "{{ item.append | default(true) }}"
+    shell: "{{ item.shell | default(users_default_shell) }}"
+    home: "{{ item.home | default(users_home_base + '/' + item.name) }}"
+    create_home: "{{ item.create_home | default(true) }}"
+    password: "{{ item.password | default(omit) }}"
+    comment: "{{ item.comment | default(omit) }}"
+    state: present
+    system: "{{ item.system | default(false) }}"
+    expires: "{{ item.expires | default(omit) }}"
+  loop: "{{ users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  no_log: "{{ item.password is defined }}"
+
+- name: Create .ssh directories
+  ansible.builtin.file:
+    path: "{{ item.home | default(users_home_base + '/' + item.name) }}/.ssh"
+    state: directory
+    owner: "{{ item.name }}"
+    group: "{{ item.group | default(item.name) }}"
+    mode: '0700'
+  loop: "{{ users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - users_create_ssh_dir | bool
+    - item.ssh_keys is defined or item.generate_ssh_key | default(false)
+
+- name: Add authorized SSH keys
+  ansible.posix.authorized_key:
+    user: "{{ item.0.name }}"
+    key: "{{ item.1 }}"
+    state: present
+    exclusive: "{{ item.0.ssh_keys_exclusive | default(false) }}"
+  loop: "{{ users | subelements('ssh_keys', skip_missing=True) }}"
+  loop_control:
+    label: "{{ item.0.name }}"
+
+- name: Generate SSH keys for users
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    generate_ssh_key: true
+    ssh_key_type: "{{ item.ssh_key_type | default(users_ssh_key_type) }}"
+    ssh_key_bits: "{{ item.ssh_key_bits | default(users_ssh_key_bits) }}"
+    ssh_key_comment: "{{ item.ssh_key_comment | default(item.name + '@' + ansible_hostname) }}"
+  loop: "{{ users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.generate_ssh_key | default(false)
+
+- name: Configure sudo access for users
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/{{ item.name }}
+    line: "{{ item.name }} {{ item.sudo_commands | default('ALL=(ALL) NOPASSWD: ALL') }}"
+    create: true
+    mode: '0440'
+    validate: visudo -cf %s
+  loop: "{{ users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.sudo | default(false)
+
+- name: Remove users
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    state: absent
+    remove: "{{ item.remove_home | default(false) }}"
+  loop: "{{ users_remove }}"
+  loop_control:
+    label: "{{ item.name }}"

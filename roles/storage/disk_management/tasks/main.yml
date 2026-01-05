@@ -1,0 +1,18 @@
+---
+# tasks/main.yml - Main tasks for disk_management role
+
+- name: Include loopback device tasks
+  ansible.builtin.include_tasks: loopback.yml
+  when: disk_management_loopback_devices | length > 0
+
+- name: Include partition tasks
+  ansible.builtin.include_tasks: partitions.yml
+  when: disk_management_disks | length > 0
+
+- name: Include filesystem tasks
+  ansible.builtin.include_tasks: filesystems.yml
+  when: disk_management_disks | length > 0
+
+- name: Include mount tasks
+  ansible.builtin.include_tasks: mounts.yml
+  when: disk_management_disks | length > 0

@@ -1,0 +1,23 @@
+# Redis configuration file
+bind {{ redis_bind_address }}
+port {{ redis_port }}
+daemonize no
+supervised systemd
+
+loglevel {{ redis_loglevel }}
+databases {{ redis_databases }}
+
+# Memory management
+maxmemory {{ redis_maxmemory }}
+maxmemory-policy {{ redis_maxmemory_policy }}
+
+# Persistence
+appendonly {{ redis_appendonly }}
+dir {{ redis_data_dir }}
+
+# Connection
+timeout {{ redis_timeout }}
+
+{% if redis_password %}
+requirepass {{ redis_password }}
+{% endif %}

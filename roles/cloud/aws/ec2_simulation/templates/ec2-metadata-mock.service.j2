@@ -1,0 +1,14 @@
+[Unit]
+Description=EC2 Instance Metadata Service Mock
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/bin/ec2-metadata-mock
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

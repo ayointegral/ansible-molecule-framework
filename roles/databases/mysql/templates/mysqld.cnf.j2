@@ -1,0 +1,50 @@
+# MySQL/MariaDB configuration file
+# Managed by Ansible
+
+[mysqld]
+# Basic Settings
+user                    = mysql
+pid-file                = /var/run/mysqld/mysqld.pid
+socket                  = {{ mysql_socket }}
+port                    = {{ mysql_port }}
+basedir                 = /usr
+datadir                 = {{ mysql_datadir }}
+tmpdir                  = /tmp
+
+# Bind Address
+bind-address            = {{ mysql_bind_address }}
+
+# Character Set
+character-set-server    = {{ mysql_character_set }}
+collation-server        = {{ mysql_collation }}
+
+# Connection Settings
+max_connections         = {{ mysql_max_connections }}
+
+# InnoDB Settings
+innodb_buffer_pool_size = {{ mysql_innodb_buffer_pool_size }}
+innodb_log_file_size    = {{ mysql_innodb_log_file_size }}
+
+# Query Cache (deprecated in MySQL 8, works in MariaDB)
+query_cache_size        = {{ mysql_query_cache_size }}
+
+# Temporary Tables
+tmp_table_size          = {{ mysql_tmp_table_size }}
+max_heap_table_size     = {{ mysql_max_heap_table_size }}
+
+# Slow Query Log
+{% if mysql_slow_query_log %}
+slow_query_log          = 1
+slow_query_log_file     = /var/log/mysql/mysql-slow.log
+long_query_time         = {{ mysql_slow_query_time }}
+{% endif %}
+
+# Skip external locking
+skip-external-locking
+
+# Error logging
+log_error               = /var/log/mysql/error.log
+
+[client]
+socket                  = {{ mysql_socket }}
+default-character-set   = {{ mysql_character_set }}

@@ -1,0 +1,71 @@
+---
+# Converge playbook for haproxy role
+# Container-safe configuration
+
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    haproxy_stats_enabled: true
+    haproxy_stats:
+      bind: "*:8404"
+      uri: /stats
+      realm: "HAProxy Statistics"
+      auth: "admin:testpass"
+      refresh: 30s
+      admin: "if LOCALHOST"
+
+    haproxy_frontends:
+      - name: http_front
+        bind: "*:80"
+        mode: http
+        default_backend: http_back
+        options:
+          - httplog
+
+    haproxy_backends:
+      - name: http_back
+        mode: http
+        balance: roundrobin
+        options:
+          - httplog
+        servers:
+          - name: web1
+            address: "127.0.0.1:8080"
+            params: "check inter 2000 rise 2 fall 3 disabled"
+
+    # Skip sysctl settings in containers
+    haproxy_sysctl_settings: []
+
+    # Skip error files (may not exist in container)
+    haproxy_defaults:
+      mode: http
+      log: global
+      option:
+        - httplog
+        - dontlognull
+        - http-server-close
+        - forwardfor except 127.0.0.0/8
+        - redispatch
+      retries: 3
+      timeout:
+        - connect 5000
+        - client 50000
+        - server 50000
+        - http-request 10000
+        - http-keep-alive 10000
+        - queue 60000
+        - tunnel 3600000
+      errorfile: []
+
+  pre_tasks:
+    - name: Update apt cache (Debian/Ubuntu)
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 600
+      when: ansible_os_family == 'Debian'
+
+  roles:
+    - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"

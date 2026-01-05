@@ -1,0 +1,12 @@
+---
+- name: Restart docker
+  ansible.builtin.service:
+    name: docker
+    state: restarted
+  when: docker_service_state == 'started'
+
+- name: Reload docker
+  ansible.builtin.service:
+    name: docker
+    state: reloaded
+  when: docker_service_state == 'started'

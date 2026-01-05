@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+# /etc/security/limits.d/99-ansible-base.conf
+
+{% for limit in base_limits %}
+{{ limit.domain }}    {{ limit.type }}    {{ limit.item }}    {{ limit.value }}
+{% endfor %}

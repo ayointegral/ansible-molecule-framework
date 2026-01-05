@@ -1,0 +1,55 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Check Key Vault data directory exists
+      ansible.builtin.stat:
+        path: /var/lib/keyvault-mock
+      register: data_dir
+
+    - name: Assert data directory exists
+      ansible.builtin.assert:
+        that: data_dir.stat.exists
+        fail_msg: "Key Vault data directory does not exist"
+
+    - name: Check secrets directory exists
+      ansible.builtin.stat:
+        path: /var/lib/keyvault-mock/secrets
+      register: secrets_dir
+
+    - name: Assert secrets directory exists
+      ansible.builtin.assert:
+        that: secrets_dir.stat.exists
+        fail_msg: "Key Vault secrets directory does not exist"
+
+    - name: Check mock service script exists
+      ansible.builtin.stat:
+        path: /usr/local/bin/keyvault-mock
+      register: mock_script
+
+    - name: Assert mock script exists
+      ansible.builtin.assert:
+        that: mock_script.stat.exists
+        fail_msg: "Key Vault mock script does not exist"
+
+    - name: Check systemd service file exists
+      ansible.builtin.stat:
+        path: /etc/systemd/system/keyvault-mock.service
+      register: service_file
+
+    - name: Assert service file exists
+      ansible.builtin.assert:
+        that: service_file.stat.exists
+        fail_msg: "Key Vault mock service file does not exist"
+
+    - name: Check test-secret was created
+      ansible.builtin.stat:
+        path: /var/lib/keyvault-mock/secrets/test-secret
+      register: test_secret
+
+    - name: Assert test secret exists
+      ansible.builtin.assert:
+        that: test_secret.stat.exists
+        fail_msg: "Test secret was not created"

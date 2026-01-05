@@ -1,0 +1,44 @@
+---
+# tasks/loopback.yml - Loopback device management for testing
+
+- name: Create loopback image files
+  ansible.builtin.command:
+    cmd: "dd if=/dev/zero of={{ item.path }} bs=1M count={{ item.size_mb }}"
+    creates: "{{ item.path }}"
+  loop: "{{ disk_management_loopback_devices }}"
+  loop_control:
+    label: "{{ item.path }}"
+
+- name: Check if loopback devices are already attached
+  ansible.builtin.command:
+    cmd: "losetup {{ item.device }}"
+  loop: "{{ disk_management_loopback_devices }}"
+  loop_control:
+    label: "{{ item.device }}"
+  register: loopback_check
+  failed_when: false
+  changed_when: false
+
+- name: Attach loopback devices
+  ansible.builtin.command:
+    cmd: "losetup {{ item.item.device }} {{ item.item.path }}"
+  loop: "{{ loopback_check.results }}"
+  loop_control:
+    label: "{{ item.item.device }}"
+  when: item.rc != 0
+  changed_when: true
+
+- name: Add loopback devices to disk list
+  ansible.builtin.set_fact:
+    disk_management_disks: "{{ disk_management_disks + _loopback_disks }}"
+  vars:
+    _loopback_disks: >-
+      {{
+        disk_management_loopback_devices
+        | selectattr('partitions', 'defined')
+        | map(attribute='device')
+        | zip(disk_management_loopback_devices | selectattr('partitions', 'defined') | map(attribute='partitions'))
+        | map('combine_device_partitions')
+        | list
+      }}
+  when: false  # Disabled - loopback devices should be defined in disk_management_disks directly

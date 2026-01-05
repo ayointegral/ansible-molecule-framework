@@ -1,0 +1,21 @@
+---
+# MinIO-based S3 simulation
+minio_version: "latest"
+minio_user: minio
+minio_group: minio
+minio_install_dir: /opt/minio
+minio_data_dir: /var/lib/minio
+
+minio_listen_address: "0.0.0.0"
+minio_port: 9000
+minio_console_port: 9001
+
+minio_root_user: minioadmin
+minio_root_password: minioadmin123
+
+minio_buckets: []
+  # - name: my-bucket
+  #   policy: public
+
+minio_service_enabled: true
+minio_service_state: started

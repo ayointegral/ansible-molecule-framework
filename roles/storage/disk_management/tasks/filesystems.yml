@@ -1,0 +1,30 @@
+---
+# tasks/filesystems.yml - Filesystem creation
+
+- name: Install filesystem tools
+  ansible.builtin.package:
+    name:
+      - e2fsprogs
+      - xfsprogs
+    state: present
+  become: true
+
+- name: Wait for partition devices to be available
+  ansible.builtin.wait_for:
+    path: "{{ item.0.device }}{{ item.1.number }}"
+    timeout: 30
+  loop: "{{ disk_management_disks | subelements('partitions', skip_missing=True) }}"
+  loop_control:
+    label: "{{ item.0.device }}{{ item.1.number }}"
+  when: item.1.filesystem is defined
+
+- name: Create filesystems on partitions
+  community.general.filesystem:
+    dev: "{{ item.0.device }}{{ item.1.number }}"
+    fstype: "{{ item.1.filesystem | default(disk_management_default_filesystem) }}"
+    force: "{{ disk_management_force_partitions | default(false) }}"
+  loop: "{{ disk_management_disks | subelements('partitions', skip_missing=True) }}"
+  loop_control:
+    label: "{{ item.0.device }}{{ item.1.number }} ({{ item.1.filesystem | default(disk_management_default_filesystem) }})"
+  become: true
+  when: item.1.filesystem is defined

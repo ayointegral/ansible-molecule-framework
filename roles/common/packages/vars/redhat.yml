@@ -1,0 +1,12 @@
+---
+# RedHat/CentOS specific variables
+
+# Essential packages for RedHat-based systems
+packages_os_essential:
+  - dnf-plugins-core
+  - ca-certificates
+  - curl
+  - wget
+
+# Package manager command
+packages_manager: dnf

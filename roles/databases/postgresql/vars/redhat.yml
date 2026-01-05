@@ -1,0 +1,7 @@
+---
+# RedHat/CentOS specific variables
+
+postgresql_packages:
+  - postgresql-server
+  - postgresql-contrib
+  - python3-psycopg2

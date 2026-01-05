@@ -1,0 +1,37 @@
+---
+# Azure Key Vault simulation settings
+keyvault_enabled: true
+keyvault_name: "molecule-test-vault"
+keyvault_port: 8443
+keyvault_bind_address: "127.0.0.1"
+
+# Vault configuration
+keyvault_data_dir: "/var/lib/keyvault-mock"
+keyvault_log_dir: "/var/log/keyvault-mock"
+
+# Mock secrets to pre-populate
+keyvault_secrets:
+  - name: "test-secret"
+    value: "super-secret-value"
+    enabled: true
+  - name: "database-password"
+    value: "db-password-123"
+    enabled: true
+  - name: "api-key"
+    value: "api-key-abc-123"
+    enabled: true
+
+# Mock keys to pre-populate
+keyvault_keys:
+  - name: "test-key"
+    type: "RSA"
+    size: 2048
+    enabled: true
+
+# Mock certificates
+keyvault_certificates: []
+
+# SSL/TLS settings for mock service
+keyvault_ssl_enabled: false
+keyvault_ssl_cert: ""
+keyvault_ssl_key: ""

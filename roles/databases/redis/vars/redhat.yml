@@ -1,0 +1,7 @@
+---
+redis_package_name: redis
+redis_service_name: redis
+redis_config_file: /etc/redis.conf
+redis_data_dir: /var/lib/redis
+redis_user: redis
+redis_group: redis

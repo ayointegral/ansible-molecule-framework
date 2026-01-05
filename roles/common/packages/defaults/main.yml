@@ -1,0 +1,42 @@
+---
+# Default variables for packages role
+
+# Common packages to install on all systems
+packages_install: []
+
+# Common packages to remove from all systems
+packages_remove: []
+
+# OS-specific package lists (merged with common lists)
+packages_install_debian: []
+packages_install_redhat: []
+packages_remove_debian: []
+packages_remove_redhat: []
+
+# Whether to upgrade all packages
+packages_upgrade_all: false
+
+# Whether to purge configuration files when removing packages (Debian only)
+packages_purge_on_remove: false
+
+# APT cache validity time in seconds (Debian only)
+packages_cache_valid_time: 3600
+
+# APT repositories to configure (Debian/Ubuntu)
+# Example:
+# packages_apt_repositories:
+#   - repo: "deb https://example.com/apt stable main"
+#     filename: "example"
+#     key_url: "https://example.com/gpg.key"
+packages_apt_repositories: []
+
+# YUM/DNF repositories to configure (RedHat/CentOS)
+# Example:
+# packages_yum_repositories:
+#   - name: "example-repo"
+#     description: "Example Repository"
+#     baseurl: "https://example.com/yum/el$releasever/$basearch/"
+#     gpgcheck: true
+#     gpgkey: "https://example.com/gpg.key"
+#     enabled: true
+packages_yum_repositories: []

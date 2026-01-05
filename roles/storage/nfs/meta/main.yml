@@ -1,0 +1,31 @@
+---
+# Role metadata
+
+galaxy_info:
+  role_name: nfs
+  namespace: molecule_framework
+  author: Ansible Molecule Framework
+  description: NFS server and client role
+  company: Example Corp
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - focal
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+  galaxy_tags:
+    - storage
+    - nfs
+    - filesystem
+    - network
+
+dependencies: []

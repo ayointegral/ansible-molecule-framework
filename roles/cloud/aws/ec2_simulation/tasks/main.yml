@@ -1,0 +1,118 @@
+---
+# EC2 Instance Metadata Service simulation
+# Simulates AWS EC2 IMDS for testing purposes
+
+- name: Install required packages
+  ansible.builtin.package:
+    name:
+      - python3
+      - python3-pip
+    state: present
+
+- name: Create EC2 metadata directory structure
+  ansible.builtin.file:
+    path: "{{ ec2_metadata_service_dir }}/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ ec2_metadata_version }}/meta-data"
+    - "{{ ec2_metadata_version }}/meta-data/network/interfaces/macs/{{ ec2_mac_address }}"
+    - "{{ ec2_metadata_version }}/meta-data/iam/security-credentials"
+    - "{{ ec2_metadata_version }}/dynamic/instance-identity"
+
+- name: Create instance-id file
+  ansible.builtin.copy:
+    content: "{{ ec2_instance_id }}"
+    dest: "{{ ec2_metadata_service_dir }}/{{ ec2_metadata_version }}/meta-data/instance-id"
+    mode: '0644'
+
+- name: Create ami-id file
+  ansible.builtin.copy:
+    content: "{{ ec2_ami_id }}"
+    dest: "{{ ec2_metadata_service_dir }}/{{ ec2_metadata_version }}/meta-data/ami-id"
+    mode: '0644'
+
+- name: Create instance-type file
+  ansible.builtin.copy:
+    content: "{{ ec2_instance_type }}"
+    dest: "{{ ec2_metadata_service_dir }}/{{ ec2_metadata_version }}/meta-data/instance-type"
+    mode: '0644'
+
+- name: Create local-hostname file
+  ansible.builtin.copy:
+    content: "ip-{{ ec2_private_ip | replace('.', '-') }}.ec2.internal"
+    dest: "{{ ec2_metadata_service_dir }}/{{ ec2_metadata_version }}/meta-data/local-hostname"
+    mode: '0644'
+
+- name: Create local-ipv4 file
+  ansible.builtin.copy:
+    content: "{{ ec2_private_ip }}"
+    dest: "{{ ec2_metadata_service_dir }}/{{ ec2_metadata_version }}/meta-data/local-ipv4"
+    mode: '0644'
+
+- name: Create public-ipv4 file
+  ansible.builtin.copy:
+    content: "{{ ec2_public_ip }}"
+    dest: "{{ ec2_metadata_service_dir }}/{{ ec2_metadata_version }}/meta-data/public-ipv4"
+    mode: '0644'
+
+- name: Create placement/availability-zone file
+  ansible.builtin.file:
+    path: "{{ ec2_metadata_service_dir }}/{{ ec2_metadata_version }}/meta-data/placement"
+    state: directory
+    mode: '0755'
+
+- name: Write availability-zone
+  ansible.builtin.copy:
+    content: "{{ ec2_availability_zone }}"
+    dest: "{{ ec2_metadata_service_dir }}/{{ ec2_metadata_version }}/meta-data/placement/availability-zone"
+    mode: '0644'
+
+- name: Create mac file
+  ansible.builtin.copy:
+    content: "{{ ec2_mac_address }}"
+    dest: "{{ ec2_metadata_service_dir }}/{{ ec2_metadata_version }}/meta-data/mac"
+    mode: '0644'
+
+- name: Create network interface metadata
+  ansible.builtin.copy:
+    content: "{{ item.content }}"
+    dest: "{{ ec2_metadata_service_dir }}/{{ ec2_metadata_version }}/meta-data/network/interfaces/macs/{{ ec2_mac_address }}/{{ item.name }}"
+    mode: '0644'
+  loop:
+    - { name: "vpc-id", content: "{{ ec2_vpc_id }}" }
+    - { name: "subnet-id", content: "{{ ec2_subnet_id }}" }
+    - { name: "local-ipv4s", content: "{{ ec2_private_ip }}" }
+
+- name: Create IAM role file
+  ansible.builtin.copy:
+    content: "{{ ec2_iam_role_name }}"
+    dest: "{{ ec2_metadata_service_dir }}/{{ ec2_metadata_version }}/meta-data/iam/security-credentials/{{ ec2_iam_role_name }}"
+    mode: '0644'
+
+- name: Create instance identity document
+  ansible.builtin.template:
+    src: instance-identity-document.json.j2
+    dest: "{{ ec2_metadata_service_dir }}/{{ ec2_metadata_version }}/dynamic/instance-identity/document"
+    mode: '0644'
+
+- name: Create IMDS mock service script
+  ansible.builtin.template:
+    src: ec2-metadata-mock.py.j2
+    dest: /usr/local/bin/ec2-metadata-mock
+    mode: '0755'
+
+- name: Create IMDS systemd service
+  ansible.builtin.template:
+    src: ec2-metadata-mock.service.j2
+    dest: /etc/systemd/system/ec2-metadata-mock.service
+    mode: '0644'
+  notify: Restart ec2-metadata-mock
+
+- name: Ensure EC2 metadata mock service is started
+  ansible.builtin.systemd:
+    name: ec2-metadata-mock
+    state: started
+    enabled: true
+    daemon_reload: true
+  when: ec2_simulation_enabled

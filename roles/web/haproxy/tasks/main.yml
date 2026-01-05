@@ -1,0 +1,89 @@
+---
+# tasks/main.yml - HAProxy installation and configuration
+
+- name: Include OS-specific variables
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_distribution | lower }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+      paths:
+        - "{{ role_path }}/vars"
+      skip: true
+
+- name: Install HAProxy (Debian/Ubuntu)
+  ansible.builtin.apt:
+    name: haproxy
+    state: "{{ haproxy_package_state }}"
+    update_cache: true
+    cache_valid_time: 3600
+  when: ansible_os_family == 'Debian'
+  notify: Restart HAProxy
+
+- name: Install HAProxy (RedHat/CentOS)
+  ansible.builtin.yum:
+    name: haproxy
+    state: "{{ haproxy_package_state }}"
+  when: ansible_os_family == 'RedHat'
+  notify: Restart HAProxy
+
+- name: Create HAProxy configuration directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - /etc/haproxy
+    - /etc/haproxy/certs
+    - /etc/haproxy/errors
+
+- name: Create HAProxy socket directory
+  ansible.builtin.file:
+    path: /var/lib/haproxy
+    state: directory
+    owner: "{{ haproxy_user }}"
+    group: "{{ haproxy_group }}"
+    mode: '0755'
+
+- name: Deploy SSL certificates
+  ansible.builtin.copy:
+    content: "{{ item.content }}"
+    dest: "/etc/haproxy/certs/{{ item.name }}.pem"
+    owner: root
+    group: root
+    mode: '0600'
+  loop: "{{ haproxy_ssl_certificates }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: haproxy_ssl_certificates | length > 0
+  no_log: true
+  notify: Reload HAProxy
+
+- name: Deploy HAProxy configuration
+  ansible.builtin.template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    owner: root
+    group: root
+    mode: '0644'
+    validate: 'haproxy -c -f %s'
+  notify: Reload HAProxy
+
+- name: Configure HAProxy sysctl settings
+  ansible.builtin.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    sysctl_set: true
+    reload: true
+  loop: "{{ haproxy_sysctl_settings }}"
+  when: haproxy_sysctl_settings | length > 0
+
+- name: Ensure HAProxy service is enabled and started
+  ansible.builtin.service:
+    name: haproxy
+    state: "{{ haproxy_service_state }}"
+    enabled: "{{ haproxy_service_enabled }}"

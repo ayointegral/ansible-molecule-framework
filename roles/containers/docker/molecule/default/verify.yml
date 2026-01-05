@@ -1,0 +1,89 @@
+---
+# Docker verification for molecule tests
+# Note: Docker service cannot actually run inside molecule containers (Docker-in-Docker)
+# We verify installation and configuration only
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Check if Docker is installed
+      ansible.builtin.command: docker --version
+      register: docker_version_output
+      changed_when: false
+      failed_when: docker_version_output.rc != 0
+
+    - name: Display Docker version
+      ansible.builtin.debug:
+        msg: "Docker version: {{ docker_version_output.stdout }}"
+
+    - name: Check if Docker service unit exists
+      ansible.builtin.stat:
+        path: /lib/systemd/system/docker.service
+      register: docker_service_file
+
+    - name: Assert Docker service unit exists
+      ansible.builtin.assert:
+        that:
+          - docker_service_file.stat.exists
+        fail_msg: "Docker service unit file does not exist"
+        success_msg: "Docker service unit file exists"
+
+    - name: Check Docker daemon configuration file exists
+      ansible.builtin.stat:
+        path: /etc/docker/daemon.json
+      register: daemon_config
+
+    - name: Assert daemon.json exists
+      ansible.builtin.assert:
+        that:
+          - daemon_config.stat.exists
+        fail_msg: "Docker daemon configuration file does not exist"
+        success_msg: "Docker daemon configuration file exists"
+
+    - name: Read Docker daemon configuration
+      ansible.builtin.slurp:
+        src: /etc/docker/daemon.json
+      register: daemon_config_content
+
+    - name: Parse daemon configuration
+      ansible.builtin.set_fact:
+        daemon_json: "{{ daemon_config_content.content | b64decode | from_json }}"
+
+    - name: Assert storage driver is configured
+      ansible.builtin.assert:
+        that:
+          - daemon_json['storage-driver'] == 'overlay2'
+        fail_msg: "Storage driver is not configured correctly"
+        success_msg: "Storage driver is correctly set to overlay2"
+
+    - name: Assert log driver is configured
+      ansible.builtin.assert:
+        that:
+          - daemon_json['log-driver'] == 'json-file'
+        fail_msg: "Log driver is not configured correctly"
+        success_msg: "Log driver is correctly set to json-file"
+
+    - name: Assert insecure registries are configured
+      ansible.builtin.assert:
+        that:
+          - "'localhost:5000' in daemon_json['insecure-registries']"
+        fail_msg: "Insecure registries not configured correctly"
+        success_msg: "Insecure registries configured correctly"
+
+    - name: Verify root user is in docker group
+      ansible.builtin.command: groups root
+      register: root_groups
+      changed_when: false
+
+    - name: Assert root is in docker group
+      ansible.builtin.assert:
+        that:
+          - "'docker' in root_groups.stdout"
+        fail_msg: "Root user is not in docker group"
+        success_msg: "Root user is in docker group"
+
+    - name: Display verification summary
+      ansible.builtin.debug:
+        msg: "Docker is properly installed and configured (service start skipped in molecule - Docker-in-Docker limitation)"

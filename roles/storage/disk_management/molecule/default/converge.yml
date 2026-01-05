@@ -1,0 +1,29 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+
+  pre_tasks:
+    - name: Update apt cache (Debian/Ubuntu)
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == 'Debian'
+
+    - name: Install required packages for testing
+      ansible.builtin.package:
+        name:
+          - parted
+          - util-linux
+        state: present
+
+  vars:
+    # Skip loopback device testing - requires device field which needs pre-allocated loop device
+    # The role task expects: size_mb, device, path
+    disk_management_loopback_devices: []
+
+    # No real disk operations - just verify role loads and works with empty lists
+    disk_management_disks: []
+
+  roles:
+    - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"

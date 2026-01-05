@@ -1,0 +1,43 @@
+---
+# tasks/main.yml - Main entry point for NFS role
+
+- name: Gather OS-specific variables
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_distribution | lower }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+        - "default.yml"
+      paths:
+        - "{{ role_path }}/vars"
+      skip: true
+
+- name: Set distribution-specific package names
+  ansible.builtin.set_fact:
+    _nfs_server_packages: >-
+      {{
+        nfs_server_packages if ansible_os_family == 'Debian'
+        else ['nfs-utils'] if ansible_os_family == 'RedHat'
+        else nfs_server_packages
+      }}
+    _nfs_client_packages: >-
+      {{
+        nfs_client_packages if ansible_os_family == 'Debian'
+        else ['nfs-utils'] if ansible_os_family == 'RedHat'
+        else nfs_client_packages
+      }}
+    _nfs_server_service: >-
+      {{
+        nfs_server_service if ansible_os_family == 'Debian'
+        else 'nfs-server' if ansible_os_family == 'RedHat'
+        else nfs_server_service
+      }}
+
+- name: Configure NFS server
+  ansible.builtin.include_tasks: server.yml
+  when: nfs_role in ['server', 'both']
+
+- name: Configure NFS client
+  ansible.builtin.include_tasks: client.yml
+  when: nfs_role in ['client', 'both']

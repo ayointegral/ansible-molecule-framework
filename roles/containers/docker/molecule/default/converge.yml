@@ -1,0 +1,34 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    docker_users:
+      - root
+    docker_daemon_config:
+      storage-driver: "overlay2"
+      log-driver: "json-file"
+      log-opts:
+        max-size: "50m"
+        max-file: "5"
+      live-restore: true
+    docker_insecure_registries:
+      - "localhost:5000"
+    docker_buildkit_enabled: true
+    docker_install_compose: false  # Skip compose download in test
+    # Docker-in-Docker doesn't work in standard molecule containers
+    # We test installation and configuration only, not service start
+    docker_service_state: stopped
+    docker_service_enabled: false
+
+  pre_tasks:
+    - name: Update apt cache (Debian)
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == 'Debian'
+
+  roles:
+    - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"

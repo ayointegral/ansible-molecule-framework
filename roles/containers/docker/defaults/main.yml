@@ -1,0 +1,53 @@
+---
+# Docker version to install (e.g., "5:24.0.7-1~ubuntu.22.04~jammy" or "latest")
+docker_version: "latest"
+
+# Docker edition: ce (community) or ee (enterprise)
+docker_edition: "ce"
+
+# Docker channel: stable, edge, or test
+docker_channel: "stable"
+
+# Users to add to the docker group
+docker_users: []
+
+# Docker daemon configuration
+docker_daemon_config:
+  storage-driver: "overlay2"
+  log-driver: "json-file"
+  log-opts:
+    max-size: "100m"
+    max-file: "3"
+  live-restore: true
+
+# Additional docker daemon options (merged with docker_daemon_config)
+docker_daemon_config_extra: {}
+
+# Docker service state
+docker_service_state: started
+docker_service_enabled: true
+
+# Whether to add Docker's official GPG key and repository
+docker_add_repo: true
+
+# Docker compose installation
+docker_install_compose: true
+docker_compose_version: "v2.23.0"
+
+# Docker data directory (leave empty for default /var/lib/docker)
+docker_data_root: ""
+
+# Enable Docker BuildKit
+docker_buildkit_enabled: true
+
+# Insecure registries (list of registry addresses)
+docker_insecure_registries: []
+
+# Registry mirrors (list of mirror URLs)
+docker_registry_mirrors: []
+
+# DNS servers for containers
+docker_dns_servers: []
+
+# Default address pools for networks
+docker_default_address_pools: []

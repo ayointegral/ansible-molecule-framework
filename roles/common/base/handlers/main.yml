@@ -1,0 +1,12 @@
+---
+# common/base - Handlers
+
+- name: Restart ntp service
+  ansible.builtin.service:
+    name: "{{ base_ntp_service }}"
+    state: restarted
+
+- name: Restart sshd
+  ansible.builtin.service:
+    name: "{{ base_ssh_service | default('sshd') }}"
+    state: restarted

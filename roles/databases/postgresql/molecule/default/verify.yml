@@ -1,0 +1,77 @@
+---
+# Verify playbook for postgresql role
+
+- name: Verify PostgreSQL installation
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Verify PostgreSQL packages are installed (Debian)
+      ansible.builtin.package:
+        name: postgresql
+        state: present
+      check_mode: true
+      register: pg_pkg
+      failed_when: pg_pkg.changed
+      when: ansible_os_family == 'Debian'
+
+    - name: Verify PostgreSQL service is running
+      ansible.builtin.service:
+        name: postgresql
+        state: started
+      check_mode: true
+      register: pg_svc
+      failed_when: pg_svc.changed
+
+    - name: Verify PostgreSQL service is enabled
+      ansible.builtin.service:
+        name: postgresql
+        enabled: true
+      check_mode: true
+      register: pg_enabled
+      failed_when: pg_enabled.changed
+
+    - name: Verify PostgreSQL is listening on port 5432
+      ansible.builtin.wait_for:
+        port: 5432
+        timeout: 10
+
+    - name: Check PostgreSQL version
+      become: true
+      become_user: postgres
+      ansible.builtin.command: psql --version
+      register: pg_version
+      changed_when: false
+
+    - name: Display PostgreSQL version
+      ansible.builtin.debug:
+        msg: "PostgreSQL version: {{ pg_version.stdout }}"
+
+    - name: Verify PostgreSQL can accept connections
+      become: true
+      become_user: postgres
+      ansible.builtin.command: psql -c "SELECT 1"
+      register: pg_connect
+      changed_when: false
+      failed_when: pg_connect.rc != 0
+
+    - name: Verify test database exists
+      become: true
+      become_user: postgres
+      ansible.builtin.command: psql -lqt
+      register: pg_databases
+      changed_when: false
+      failed_when: "'testdb' not in pg_databases.stdout"
+
+    - name: Verify test user exists
+      become: true
+      become_user: postgres
+      ansible.builtin.command: psql -c "SELECT usename FROM pg_user WHERE usename='testuser'"
+      register: pg_users
+      changed_when: false
+      failed_when: "'testuser' not in pg_users.stdout"
+
+    - name: Display verification summary
+      ansible.builtin.debug:
+        msg: "All PostgreSQL verification checks passed!"

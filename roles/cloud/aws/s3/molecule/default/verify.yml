@@ -1,0 +1,25 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Check minio binary exists
+      ansible.builtin.stat:
+        path: /usr/local/bin/minio
+      register: minio_bin
+
+    - name: Assert minio binary exists
+      ansible.builtin.assert:
+        that: minio_bin.stat.exists
+        fail_msg: "MinIO binary not found"
+
+    - name: Check minio data directory exists
+      ansible.builtin.stat:
+        path: /var/lib/minio
+      register: minio_data
+
+    - name: Assert minio data directory exists
+      ansible.builtin.assert:
+        that: minio_data.stat.exists and minio_data.stat.isdir
+        fail_msg: "MinIO data directory not found"

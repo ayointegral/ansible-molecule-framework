@@ -1,0 +1,19 @@
+---
+# Azurite-based Azure Storage simulation
+azurite_version: "latest"
+azurite_user: azurite
+azurite_group: azurite
+azurite_install_dir: /opt/azurite
+azurite_data_dir: /var/lib/azurite
+
+azurite_listen_address: "0.0.0.0"
+azurite_blob_port: 10000
+azurite_queue_port: 10001
+azurite_table_port: 10002
+
+# Loose mode for testing
+azurite_loose_mode: true
+azurite_skip_api_version_check: true
+
+azurite_service_enabled: true
+azurite_service_state: started

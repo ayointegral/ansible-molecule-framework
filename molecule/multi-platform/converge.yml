@@ -1,0 +1,7 @@
+---
+- name: Converge - Multi-platform
+  hosts: all
+  become: true
+  roles:
+    - role: common/base
+    - role: common/packages

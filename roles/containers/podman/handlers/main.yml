@@ -1,0 +1,16 @@
+---
+# Handlers for Podman role
+
+- name: Restart podman socket
+  ansible.builtin.systemd:
+    name: podman.socket
+    state: restarted
+  when:
+    - podman_enable_socket | bool
+    - ansible_service_mgr == 'systemd'
+  listen: Restart podman socket
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+  listen: Reload systemd

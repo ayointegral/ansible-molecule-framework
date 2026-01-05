@@ -1,0 +1,21 @@
+# Prometheus configuration
+global:
+  scrape_interval: {{ prometheus_scrape_interval }}
+  evaluation_interval: {{ prometheus_evaluation_interval }}
+
+rule_files:
+  - "{{ prometheus_config_dir }}/rules/*.yml"
+
+scrape_configs:
+{% for job in prometheus_scrape_configs %}
+  - job_name: '{{ job.job_name }}'
+{% if job.static_configs is defined %}
+    static_configs:
+{% for config in job.static_configs %}
+      - targets: {{ config.targets | to_json }}
+{% if config.labels is defined %}
+        labels: {{ config.labels | to_json }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}

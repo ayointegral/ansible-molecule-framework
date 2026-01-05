@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  role_name: gcs
+  namespace: molecule_test
+  author: Ansible Testing
+  description: GCP Cloud Storage simulation using fake-gcs-server
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Ubuntu
+      versions: ["22.04"]
+    - name: Debian
+      versions: ["12"]
+    - name: EL
+      versions: ["9"]
+dependencies: []

@@ -1,0 +1,97 @@
+---
+# Main tasks for Podman role
+
+- name: Include OS-specific variables
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_distribution | lower }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+      skip: true
+
+- name: Install Podman - Debian/Ubuntu
+  ansible.builtin.include_tasks: install-debian.yml
+  when: ansible_os_family == 'Debian'
+
+- name: Install Podman - RedHat/CentOS
+  ansible.builtin.include_tasks: install-redhat.yml
+  when: ansible_os_family == 'RedHat'
+
+- name: Ensure containers configuration directory exists
+  ansible.builtin.file:
+    path: /etc/containers
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Configure container registries
+  ansible.builtin.template:
+    src: registries.conf.j2
+    dest: "{{ podman_registries_conf_path }}"
+    owner: root
+    group: root
+    mode: '0644'
+    backup: true
+  notify: Restart podman socket
+
+- name: Configure container storage
+  ansible.builtin.template:
+    src: storage.conf.j2
+    dest: "{{ podman_storage_conf_path }}"
+    owner: root
+    group: root
+    mode: '0644'
+    backup: true
+  notify: Restart podman socket
+
+- name: Configure rootless containers
+  when: podman_configure_rootless | bool
+  block:
+    - name: Ensure user namespaces are enabled
+      ansible.posix.sysctl:
+        name: user.max_user_namespaces
+        value: '28633'
+        state: present
+        sysctl_file: /etc/sysctl.d/99-podman-userns.conf
+        reload: true
+
+    - name: Configure subuid for rootless users
+      ansible.builtin.lineinfile:
+        path: /etc/subuid
+        regexp: "^{{ item }}:"
+        line: "{{ item }}:{{ podman_subuid_start }}:{{ podman_subuid_count }}"
+        create: true
+        mode: '0644'
+      loop: "{{ podman_socket_users }}"
+      when: podman_socket_users | length > 0
+
+    - name: Configure subgid for rootless users
+      ansible.builtin.lineinfile:
+        path: /etc/subgid
+        regexp: "^{{ item }}:"
+        line: "{{ item }}:{{ podman_subuid_start }}:{{ podman_subuid_count }}"
+        create: true
+        mode: '0644'
+      loop: "{{ podman_socket_users }}"
+      when: podman_socket_users | length > 0
+
+- name: Enable podman socket for root
+  ansible.builtin.systemd:
+    name: podman.socket
+    enabled: true
+    state: started
+  when:
+    - podman_enable_socket | bool
+    - ansible_service_mgr == 'systemd'
+
+- name: Verify Podman installation
+  ansible.builtin.command: podman --version
+  register: podman_version_output
+  changed_when: false
+  check_mode: false
+
+- name: Display Podman version
+  ansible.builtin.debug:
+    msg: "Podman installed: {{ podman_version_output.stdout }}"

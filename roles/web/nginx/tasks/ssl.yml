@@ -1,0 +1,48 @@
+---
+# SSL/TLS configuration tasks for nginx
+
+- name: Ensure SSL directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - /etc/ssl/certs
+    - /etc/ssl/private
+
+- name: Generate self-signed SSL certificate
+  ansible.builtin.command: >
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048
+    -keyout {{ nginx_ssl_certificate_key }}
+    -out {{ nginx_ssl_certificate }}
+    -subj "{{ nginx_ssl_self_signed_subject }}"
+  args:
+    creates: "{{ nginx_ssl_certificate }}"
+  when: nginx_ssl_generate_self_signed
+
+- name: Set permissions on SSL key
+  ansible.builtin.file:
+    path: "{{ nginx_ssl_certificate_key }}"
+    owner: root
+    group: root
+    mode: '0600'
+  when: nginx_ssl_generate_self_signed
+
+- name: Generate DH parameters
+  ansible.builtin.command: >
+    openssl dhparam -out {{ nginx_ssl_dhparam }} {{ nginx_ssl_dhparam_size }}
+  args:
+    creates: "{{ nginx_ssl_dhparam }}"
+  when: nginx_ssl_generate_dhparam
+  notify: Reload nginx
+
+- name: Deploy SSL configuration snippet
+  ansible.builtin.template:
+    src: ssl-params.conf.j2
+    dest: "{{ nginx_conf_d_dir }}/ssl-params.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload nginx

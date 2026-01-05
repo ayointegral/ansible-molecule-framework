@@ -1,0 +1,17 @@
+{
+  "accountId": "{{ ec2_account_id }}",
+  "architecture": "x86_64",
+  "availabilityZone": "{{ ec2_availability_zone }}",
+  "billingProducts": null,
+  "devpayProductCodes": null,
+  "marketplaceProductCodes": null,
+  "imageId": "{{ ec2_ami_id }}",
+  "instanceId": "{{ ec2_instance_id }}",
+  "instanceType": "{{ ec2_instance_type }}",
+  "kernelId": null,
+  "pendingTime": "{{ ec2_instance_pending_time | default('2024-01-01T00:00:00Z') }}",
+  "privateIp": "{{ ec2_private_ip }}",
+  "ramdiskId": null,
+  "region": "{{ ec2_region }}",
+  "version": "2017-09-30"
+}

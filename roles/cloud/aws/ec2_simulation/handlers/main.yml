@@ -1,0 +1,7 @@
+---
+- name: Restart ec2-metadata-mock
+  ansible.builtin.systemd:
+    name: ec2-metadata-mock
+    state: restarted
+    daemon_reload: true
+  when: ec2_simulation_enabled

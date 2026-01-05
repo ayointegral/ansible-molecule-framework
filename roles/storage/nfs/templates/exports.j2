@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+# NFS exports configuration
+
+{% for export in nfs_exports %}
+{{ export.path }}{% for host in export.hosts %} {{ host.name }}({{ host.options }}){% endfor %}
+
+{% endfor %}

@@ -1,0 +1,28 @@
+---
+# Windows Container Converge Playbook
+# This playbook is designed for Windows Server Core containers
+# Requires Windows host with Docker Desktop in Windows container mode
+
+- name: Converge - Windows
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Wait for WinRM
+      ansible.builtin.wait_for_connection:
+        timeout: 60
+
+    - name: Gather Windows facts
+      ansible.builtin.setup:
+
+    - name: Display Windows version
+      ansible.builtin.debug:
+        msg: "Windows version: {{ ansible_os_name | default('Unknown') }}"
+
+    - name: Note about Windows container limitations
+      ansible.builtin.debug:
+        msg: |
+          Windows container testing has significant limitations:
+          1. Requires Windows host with Docker Desktop
+          2. Many Windows features cannot be installed in containers
+          3. Service management differs from full Windows installations
+          4. Network configuration is limited
