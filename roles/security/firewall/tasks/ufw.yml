@@ -55,7 +55,7 @@
   loop_control:
     label: "{{ item.name }}"
   register: ufw_service_result
-  failed_when: 
+  failed_when:
     - ufw_service_result is failed
     - "'Could not find a profile' not in (ufw_service_result.msg | default(''))"
   when: firewall_allowed_services | length > 0

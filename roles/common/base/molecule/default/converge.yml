@@ -31,17 +31,17 @@
     # Skip network/hostname changes in containers
     base_set_hostname: false
     base_manage_hosts_file: false
-    
+
     # Skip NTP and SSH in containers
     base_configure_ntp: false
     base_configure_ssh: false
-    
+
     # Skip sysctl (not writable in containers)
     base_sysctl_params: []
-    
+
     # Skip resource limits in containers (can cause issues)
     base_limits: []
-    
+
     # Keep directories - this should work
     base_directories:
       - path: /opt/ansible

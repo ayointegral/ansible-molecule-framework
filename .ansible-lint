@@ -1,0 +1,60 @@
+---
+# Ansible-lint configuration
+# https://ansible.readthedocs.io/projects/lint/configuring/
+
+profile: moderate
+
+# Exclude paths from linting
+exclude_paths:
+  - .git/
+  - .github/
+  - venv/
+  - .tox/
+  - molecule/
+
+# Skip specific rules
+skip_list:
+  # Variable naming - would require renaming hundreds of variables
+  # Role variables use descriptive prefixes like docker_, nginx_, vault_ etc.
+  - var-naming[no-role-prefix]
+
+  # Commands in molecule tests are for testing, not production
+  - command-instead-of-module
+  - command-instead-of-shell
+  - no-changed-when
+  - risky-shell-pipe
+
+  # Role path imports are intentional for nested roles
+  - role-name[path]
+
+  # Package latest is sometimes needed for testing
+  - package-latest
+
+# Warn only (don't fail) for these rules
+warn_list:
+  - experimental
+  - name[casing]
+  - yaml[trailing-spaces]
+  - fqcn[action]
+  - fqcn[canonical]
+
+# Enable offline mode to skip galaxy checks
+offline: false
+
+# Use progressive mode to only fail on new issues
+# progressive: true
+
+# Parseable output format
+# parseable: true
+
+# Show rule IDs in output
+# rulesdir:
+#   - ./custom-rules/
+
+# Mock modules/roles that may not be installed
+mock_modules:
+  - community.general.npm
+  - community.general.locale_gen
+
+mock_roles:
+  - containers/docker
