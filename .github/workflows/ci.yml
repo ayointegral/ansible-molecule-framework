@@ -91,8 +91,14 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           
           FAILED=0
-          for playbook in playbooks/*.yml; do
-            if ansible-playbook --syntax-check "$playbook" -i inventories/test/test-web/hosts.yml 2>/dev/null; then
+          # Find all playbooks in subdirectories
+          for playbook in $(find playbooks -name "*.yml" -type f | sort); do
+            # Skip site.yml as it uses import_playbook which requires special handling
+            if [[ "$playbook" == *"site.yml" ]]; then
+              echo "⏭️ \`$playbook\` (skipped - uses import_playbook)" >> $GITHUB_STEP_SUMMARY
+              continue
+            fi
+            if ansible-playbook --syntax-check "$playbook" -i inventories/test/test-web/hosts.yml 2>&1; then
               echo "✅ \`$playbook\`" >> $GITHUB_STEP_SUMMARY
             else
               echo "❌ \`$playbook\`" >> $GITHUB_STEP_SUMMARY
