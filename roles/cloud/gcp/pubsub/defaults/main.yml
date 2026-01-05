@@ -1,0 +1,11 @@
+---
+pubsub_project_id: "my-project"
+pubsub_emulator_host: ""
+
+pubsub_topics: []
+# - name: events
+#   subscriptions:
+#     - name: events-sub
+#       ack_deadline: 10
+
+pubsub_service_account_file: ""

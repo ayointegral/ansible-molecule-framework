@@ -1,0 +1,50 @@
+---
+# MinIO scenario - S3-compatible object storage
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: s3-test-instance
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    pre_build_image: true
+    privileged: true
+    command: /sbin/init
+    tmpfs:
+      - /run
+      - /tmp
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
+    networks:
+      - name: minio-network
+
+  - name: minio
+    image: minio/minio:latest
+    pre_build_image: true
+    command: "server /data --console-address :9001"
+    env:
+      MINIO_ROOT_USER: "minioadmin"
+      MINIO_ROOT_PASSWORD: "minioadmin"
+    exposed_ports:
+      - 9000/tcp
+      - 9001/tcp
+    networks:
+      - name: minio-network
+
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ALLOW_BROKEN_CONDITIONALS: "true"
+    AWS_ACCESS_KEY_ID: "minioadmin"
+    AWS_SECRET_ACCESS_KEY: "minioadmin"
+  inventory:
+    hosts:
+      all:
+        hosts:
+          s3-test-instance:
+            ansible_connection: docker
+            minio_endpoint: "http://minio:9000"
+
+verifier:
+  name: ansible

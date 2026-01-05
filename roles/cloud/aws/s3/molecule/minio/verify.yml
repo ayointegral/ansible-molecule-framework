@@ -1,0 +1,42 @@
+---
+- name: Verify - S3 MinIO operations
+  hosts: s3-test-instance
+  become: true
+  gather_facts: false
+  vars:
+    minio_endpoint: "http://minio:9000"
+
+  tasks:
+    - name: Verify buckets and files
+      ansible.builtin.shell: |
+        python3 << 'EOF'
+        import boto3
+        from botocore.client import Config
+
+        s3 = boto3.client('s3',
+            endpoint_url='{{ minio_endpoint }}',
+            aws_access_key_id='minioadmin',
+            aws_secret_access_key='minioadmin',
+            config=Config(signature_version='s3v4'))
+
+        # Verify buckets
+        buckets = [b['Name'] for b in s3.list_buckets()['Buckets']]
+        assert 'test-bucket' in buckets, "test-bucket not found"
+        assert 'logs-bucket' in buckets, "logs-bucket not found"
+        print(f"PASS: Found {len(buckets)} buckets")
+
+        # Verify file content
+        obj = s3.get_object(Bucket='test-bucket', Key='test.txt')
+        content = obj['Body'].read().decode()
+        assert content == 'Hello MinIO!', f"Content mismatch: {content}"
+        print("PASS: File content verified")
+
+        # List objects
+        objects = s3.list_objects_v2(Bucket='test-bucket')['Contents']
+        print(f"PASS: Found {len(objects)} objects in test-bucket")
+        EOF
+      register: verify_result
+
+    - name: Display verification
+      ansible.builtin.debug:
+        var: verify_result.stdout_lines

@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  localstack:
+    image: localstack/localstack:{{ localstack_version }}
+    container_name: localstack
+    ports:
+      - "{{ localstack_port }}:4566"
+    environment:
+      - SERVICES={{ localstack_services | join(',') }}
+      - DEBUG={{ '1' if localstack_debug else '0' }}
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - AWS_ACCESS_KEY_ID={{ localstack_aws_access_key }}
+      - AWS_SECRET_ACCESS_KEY={{ localstack_aws_secret_key }}
+      - AWS_DEFAULT_REGION={{ localstack_aws_region }}
+    volumes:
+      - "{{ localstack_data_dir }}:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - {{ localstack_docker_network }}
+    restart: unless-stopped
+
+networks:
+  {{ localstack_docker_network }}:
+    driver: bridge

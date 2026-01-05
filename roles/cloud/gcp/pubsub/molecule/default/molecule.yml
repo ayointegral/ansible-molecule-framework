@@ -1,0 +1,45 @@
+---
+# GCP Pub/Sub Emulator scenario
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: pubsub-test-instance
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    pre_build_image: true
+    privileged: true
+    command: /sbin/init
+    tmpfs:
+      - /run
+      - /tmp
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
+    networks:
+      - name: pubsub-network
+
+  - name: pubsub-emulator
+    image: google/cloud-sdk:emulators
+    pre_build_image: true
+    command: "gcloud beta emulators pubsub start --host-port=0.0.0.0:8085"
+    exposed_ports:
+      - 8085/tcp
+    networks:
+      - name: pubsub-network
+
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ALLOW_BROKEN_CONDITIONALS: "true"
+    PUBSUB_EMULATOR_HOST: "pubsub-emulator:8085"
+  inventory:
+    hosts:
+      all:
+        hosts:
+          pubsub-test-instance:
+            ansible_connection: docker
+            pubsub_emulator_host: "pubsub-emulator:8085"
+
+verifier:
+  name: ansible

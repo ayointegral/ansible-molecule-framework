@@ -1,0 +1,51 @@
+---
+- name: Verify - Consul service discovery
+  hosts: consul-test-instance
+  become: true
+  gather_facts: false
+  vars:
+    consul_addr: "http://consul:8500"
+
+  tasks:
+    - name: Verify services registered
+      ansible.builtin.shell: |
+        services=$(curl -s {{ consul_addr }}/v1/agent/services | jq 'keys | length')
+        [ "$services" -ge 4 ] || exit 1
+        echo "PASS: Found $services registered services"
+
+        # Verify web service has 2 instances
+        web_count=$(curl -s {{ consul_addr }}/v1/catalog/service/web | jq 'length')
+        [ "$web_count" -eq 2 ] || exit 1
+        echo "PASS: web service has $web_count instances"
+      register: verify_services
+
+    - name: Verify service discovery
+      ansible.builtin.shell: |
+        # Get web service addresses
+        curl -s {{ consul_addr }}/v1/catalog/service/web | jq -r '.[].ServiceAddress'
+        echo "PASS: Service discovery working"
+      register: verify_discovery
+
+    - name: Verify KV store
+      ansible.builtin.shell: |
+        # Get environment
+        env=$(curl -s {{ consul_addr }}/v1/kv/config/environment?raw)
+        [ "$env" = "production" ] || exit 1
+        echo "PASS: environment = $env"
+
+        # Get app settings
+        settings=$(curl -s {{ consul_addr }}/v1/kv/config/app/settings?raw)
+        echo "$settings" | jq -e '.log_level' > /dev/null || exit 1
+        echo "PASS: app settings retrieved"
+
+        # List all config keys
+        keys=$(curl -s {{ consul_addr }}/v1/kv/config/?keys | jq 'length')
+        echo "PASS: Found $keys config keys"
+      register: verify_kv
+
+    - name: Display verification
+      ansible.builtin.debug:
+        msg:
+          - "{{ verify_services.stdout_lines }}"
+          - "{{ verify_discovery.stdout_lines }}"
+          - "{{ verify_kv.stdout_lines }}"

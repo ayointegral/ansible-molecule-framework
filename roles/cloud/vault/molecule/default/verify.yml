@@ -1,0 +1,57 @@
+---
+- name: Verify - Vault secrets
+  hosts: vault-test-instance
+  become: true
+  gather_facts: false
+  vars:
+    vault_addr: "http://vault:8200"
+    vault_token: "root"
+  environment:
+    VAULT_ADDR: "{{ vault_addr }}"
+    VAULT_TOKEN: "{{ vault_token }}"
+
+  tasks:
+    - name: Verify secrets retrieval
+      ansible.builtin.shell: |
+        python3 << 'EOF'
+        import hvac
+
+        client = hvac.Client(url='{{ vault_addr }}', token='{{ vault_token }}')
+
+        # Verify database secret
+        secret = client.secrets.kv.v2.read_secret_version(path='database/postgres')
+        data = secret['data']['data']
+        assert data['username'] == 'dbadmin', "Username mismatch"
+        assert 'password' in data, "Password not found"
+        print("PASS: database/postgres secret verified")
+
+        # Verify API keys
+        secret = client.secrets.kv.v2.read_secret_version(path='api/keys')
+        data = secret['data']['data']
+        assert 'stripe_key' in data, "stripe_key not found"
+        print("PASS: api/keys secret verified")
+
+        # Verify app config
+        secret = client.secrets.kv.v2.read_secret_version(path='app/config')
+        data = secret['data']['data']
+        assert data['log_level'] == 'info', "log_level mismatch"
+        print("PASS: app/config secret verified")
+
+        # List secrets
+        secrets = client.secrets.kv.v2.list_secrets(path='')
+        print(f"PASS: Found {len(secrets['data']['keys'])} secret paths")
+        EOF
+      register: verify_result
+
+    - name: Verify policy exists
+      ansible.builtin.shell: |
+        curl -s -H "X-Vault-Token: {{ vault_token }}" \
+          {{ vault_addr }}/v1/sys/policies/acl/db-readonly | jq -r '.data.policy' | head -1
+        echo "PASS: Policy db-readonly exists"
+      register: verify_policy
+
+    - name: Display verification
+      ansible.builtin.debug:
+        msg:
+          - "{{ verify_result.stdout_lines }}"
+          - "{{ verify_policy.stdout_lines[-1] }}"

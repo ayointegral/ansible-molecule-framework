@@ -1,0 +1,92 @@
+---
+- name: Verify - AWS LocalStack operations
+  hosts: aws-test-instance
+  become: true
+  gather_facts: false
+  vars:
+    localstack_endpoint: "http://localstack:4566"
+  environment:
+    AWS_ACCESS_KEY_ID: "test"
+    AWS_SECRET_ACCESS_KEY: "test"
+    AWS_DEFAULT_REGION: "us-east-1"
+
+  tasks:
+    - name: Verify S3 buckets
+      ansible.builtin.shell: |
+        buckets=$(aws --endpoint-url={{ localstack_endpoint }} s3 ls | wc -l)
+        [ "$buckets" -ge 2 ] || exit 1
+        echo "PASS: Found $buckets S3 buckets"
+      register: verify_s3
+
+    - name: Verify S3 file download
+      ansible.builtin.shell: |
+        aws --endpoint-url={{ localstack_endpoint }} s3 cp s3://test-bucket/test.txt /tmp/downloaded.txt
+        content=$(cat /tmp/downloaded.txt)
+        [ "$content" = "Hello from LocalStack" ] || exit 1
+        echo "PASS: S3 file content verified"
+      register: verify_s3_content
+
+    - name: Verify SQS queues
+      ansible.builtin.shell: |
+        queues=$(aws --endpoint-url={{ localstack_endpoint }} sqs list-queues --query 'QueueUrls' --output text | wc -w)
+        [ "$queues" -ge 2 ] || exit 1
+        echo "PASS: Found $queues SQS queues"
+      register: verify_sqs
+
+    - name: Verify SQS messages
+      ansible.builtin.shell: |
+        count=$(aws --endpoint-url={{ localstack_endpoint }} sqs get-queue-attributes \
+          --queue-url {{ localstack_endpoint }}/000000000000/test-queue \
+          --attribute-names ApproximateNumberOfMessages \
+          --query 'Attributes.ApproximateNumberOfMessages' --output text)
+        [ "$count" -ge 1 ] || exit 1
+        echo "PASS: Found $count message(s) in queue"
+      register: verify_sqs_msg
+
+    - name: Verify SNS topics
+      ansible.builtin.shell: |
+        topics=$(aws --endpoint-url={{ localstack_endpoint }} sns list-topics --query 'Topics' --output text | wc -w)
+        [ "$topics" -ge 2 ] || exit 1
+        echo "PASS: Found $topics SNS topics"
+      register: verify_sns
+
+    - name: Verify DynamoDB table
+      ansible.builtin.shell: |
+        item=$(aws --endpoint-url={{ localstack_endpoint }} dynamodb get-item \
+          --table-name test-table \
+          --key '{"id": {"S": "item1"}}' \
+          --query 'Item.name.S' --output text)
+        [ "$item" = "Test Item" ] || exit 1
+        echo "PASS: DynamoDB item verified: $item"
+      register: verify_dynamodb
+
+    - name: Verify Secrets Manager
+      ansible.builtin.shell: |
+        secret=$(aws --endpoint-url={{ localstack_endpoint }} secretsmanager get-secret-value \
+          --secret-id test-secret \
+          --query 'SecretString' --output text)
+        echo "$secret" | grep -q "admin" || exit 1
+        echo "PASS: Secret contains expected data"
+      register: verify_secrets
+
+    - name: Verify SSM Parameter Store
+      ansible.builtin.shell: |
+        value=$(aws --endpoint-url={{ localstack_endpoint }} ssm get-parameter \
+          --name "/app/config/database_url" \
+          --query 'Parameter.Value' --output text)
+        echo "$value" | grep -q "postgresql" || exit 1
+        echo "PASS: SSM parameter verified: $value"
+      register: verify_ssm
+
+    - name: Verification summary
+      ansible.builtin.debug:
+        msg:
+          - "{{ verify_s3.stdout }}"
+          - "{{ verify_s3_content.stdout }}"
+          - "{{ verify_sqs.stdout }}"
+          - "{{ verify_sqs_msg.stdout }}"
+          - "{{ verify_sns.stdout }}"
+          - "{{ verify_dynamodb.stdout }}"
+          - "{{ verify_secrets.stdout }}"
+          - "{{ verify_ssm.stdout }}"
+          - "All AWS services verified!"

@@ -1,0 +1,20 @@
+[Unit]
+Description=HashiCorp Consul - Service Discovery and Configuration
+Documentation=https://www.consul.io/docs/
+Requires=network-online.target
+After=network-online.target
+ConditionFileNotEmpty={{ consul_config_dir }}/consul.hcl
+
+[Service]
+User={{ consul_user }}
+Group={{ consul_group }}
+ExecStart=/usr/local/bin/consul agent -config-dir={{ consul_config_dir }}
+ExecReload=/bin/kill --signal HUP $MAINPID
+KillMode=process
+KillSignal=SIGINT
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

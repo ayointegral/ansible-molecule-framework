@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  author: Ansible Molecule Testing
+  role_name: pubsub
+  namespace: cloud_gcp
+  description: GCP Pub/Sub configuration and testing
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - focal
+
+dependencies: []

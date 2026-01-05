@@ -1,0 +1,25 @@
+---
+# LocalStack configuration
+localstack_version: "latest"
+localstack_services:
+  - s3
+  - sqs
+  - sns
+  - dynamodb
+  - lambda
+  - iam
+  - cloudwatch
+  - secretsmanager
+  - ssm
+
+localstack_port: 4566
+localstack_debug: false
+
+# Docker configuration
+localstack_docker_network: localstack-network
+localstack_data_dir: /var/lib/localstack
+
+# AWS credentials (for local testing)
+localstack_aws_access_key: "test"
+localstack_aws_secret_key: "test"
+localstack_aws_region: "us-east-1"

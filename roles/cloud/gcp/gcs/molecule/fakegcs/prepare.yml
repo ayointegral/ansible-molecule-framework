@@ -1,0 +1,36 @@
+---
+- name: Prepare - Wait for fake-gcs-server
+  hosts: gcs-test-instance
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - curl
+          - python3-pip
+        state: present
+
+    - name: Install Google Cloud Storage library
+      ansible.builtin.pip:
+        name: google-cloud-storage
+        state: present
+
+    - name: Wait for fake-gcs-server
+      ansible.builtin.uri:
+        url: "http://fake-gcs:4443/storage/v1/b"
+        method: GET
+        status_code: [200, 400]
+      register: gcs_health
+      until: gcs_health.status in [200, 400]
+      retries: 30
+      delay: 2
+
+    - name: fake-gcs-server is ready
+      ansible.builtin.debug:
+        msg: "fake-gcs-server ready at http://fake-gcs:4443"

@@ -1,0 +1,39 @@
+---
+- name: Prepare - Wait for Azurite
+  hosts: azure-test-instance
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - curl
+          - python3-pip
+        state: present
+
+    - name: Install Azure Storage SDK
+      ansible.builtin.pip:
+        name:
+          - azure-storage-blob
+          - azure-storage-queue
+          - azure-data-tables
+        state: present
+
+    - name: Wait for Azurite Blob service
+      ansible.builtin.uri:
+        url: "http://azurite:10000/"
+        method: GET
+        status_code: [400, 200]
+      register: azurite_health
+      until: azurite_health.status in [400, 200]
+      retries: 30
+      delay: 2
+
+    - name: Azurite is ready
+      ansible.builtin.debug:
+        msg: "Azurite ready - Blob:10000, Queue:10001, Table:10002"

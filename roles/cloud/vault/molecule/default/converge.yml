@@ -1,0 +1,65 @@
+---
+- name: Converge - Test Vault secrets management
+  hosts: vault-test-instance
+  become: true
+  gather_facts: true
+  vars:
+    vault_addr: "http://vault:8200"
+    vault_token: "root"
+  environment:
+    VAULT_ADDR: "{{ vault_addr }}"
+    VAULT_TOKEN: "{{ vault_token }}"
+
+  tasks:
+    - name: Enable KV secrets engine
+      ansible.builtin.shell: |
+        curl -s -X POST \
+          -H "X-Vault-Token: {{ vault_token }}" \
+          -d '{"type": "kv-v2"}' \
+          {{ vault_addr }}/v1/sys/mounts/secret || true
+        echo "KV engine enabled"
+      register: enable_kv
+
+    - name: Create database credentials secret
+      ansible.builtin.shell: |
+        python3 << 'EOF'
+        import hvac
+
+        client = hvac.Client(url='{{ vault_addr }}', token='{{ vault_token }}')
+
+        # Create secrets
+        client.secrets.kv.v2.create_or_update_secret(
+            path='database/postgres',
+            secret={'username': 'dbadmin', 'password': 'supersecret123', 'host': 'db.example.com'}
+        )
+        print("Created: database/postgres")
+
+        client.secrets.kv.v2.create_or_update_secret(
+            path='api/keys',
+            secret={'stripe_key': 'sk_test_xxx', 'sendgrid_key': 'SG.xxx'}
+        )
+        print("Created: api/keys")
+
+        client.secrets.kv.v2.create_or_update_secret(
+            path='app/config',
+            secret={'debug': 'false', 'log_level': 'info', 'max_connections': '100'}
+        )
+        print("Created: app/config")
+        EOF
+      register: create_secrets
+
+    - name: Create Vault policy
+      ansible.builtin.shell: |
+        curl -s -X PUT \
+          -H "X-Vault-Token: {{ vault_token }}" \
+          -d '{"policy": "path \"secret/data/database/*\" { capabilities = [\"read\"] }"}' \
+          {{ vault_addr }}/v1/sys/policies/acl/db-readonly
+        echo "Created policy: db-readonly"
+      register: create_policy
+
+    - name: Display results
+      ansible.builtin.debug:
+        msg:
+          - "{{ enable_kv.stdout }}"
+          - "{{ create_secrets.stdout_lines }}"
+          - "{{ create_policy.stdout }}"

@@ -16,7 +16,7 @@ collections:
     version: ">=3.4.0"
   - name: containers.podman
     version: ">=1.10.0"
-
+  
   # Cloud provider collections
   - name: amazon.aws
     version: ">=6.0.0"
@@ -24,7 +24,7 @@ collections:
     version: ">=1.15.0"
   - name: google.cloud
     version: ">=1.1.0"
-
+  
   # Database collections
   - name: community.postgresql
     version: ">=2.4.0"
@@ -32,16 +32,16 @@ collections:
     version: ">=3.7.0"
   - name: community.mongodb
     version: ">=1.6.0"
-
+  
   # Windows collections
   - name: ansible.windows
     version: ">=1.14.0"
   - name: community.windows
     version: ">=1.13.0"
-
-  # Security hardening (CIS-compliant)
-  - name: devsec.hardening
-    version: ">=10.0.0"
+  
+  # Molecule testing
+  - name: ansible.molecule
+    version: ">=0.1.0"
 
 roles:
   # Helpful roles for testing

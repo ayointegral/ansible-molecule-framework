@@ -1,0 +1,55 @@
+---
+# LocalStack scenario - Free AWS Cloud Emulator
+# Supports: S3, SQS, SNS, DynamoDB, Lambda, IAM, CloudWatch, and more
+# Free tier includes most services
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: aws-test-instance
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    pre_build_image: true
+    privileged: true
+    command: /sbin/init
+    tmpfs:
+      - /run
+      - /tmp
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
+    networks:
+      - name: localstack-network
+
+  - name: localstack
+    image: localstack/localstack:latest
+    pre_build_image: true
+    privileged: true
+    env:
+      SERVICES: "s3,sqs,sns,dynamodb,lambda,iam,cloudwatch,secretsmanager,ssm"
+      DEBUG: "0"
+      DOCKER_HOST: "unix:///var/run/docker.sock"
+    exposed_ports:
+      - 4566/tcp
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - name: localstack-network
+
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ALLOW_BROKEN_CONDITIONALS: "true"
+    AWS_ACCESS_KEY_ID: "test"
+    AWS_SECRET_ACCESS_KEY: "test"
+    AWS_DEFAULT_REGION: "us-east-1"
+  inventory:
+    hosts:
+      all:
+        hosts:
+          aws-test-instance:
+            ansible_connection: docker
+            localstack_endpoint: "http://localstack:4566"
+
+verifier:
+  name: ansible

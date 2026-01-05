@@ -1,0 +1,85 @@
+---
+- name: Converge - Test Azure Storage operations
+  hosts: azure-test-instance
+  become: true
+  gather_facts: true
+  vars:
+    azure_connection_string: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1"
+  environment:
+    AZURE_STORAGE_CONNECTION_STRING: "{{ azure_connection_string }}"
+
+  tasks:
+    - name: Create blob container
+      ansible.builtin.shell: |
+        python3 << 'EOF'
+        import os
+        from azure.storage.blob import BlobServiceClient
+
+        conn_str = os.environ['AZURE_STORAGE_CONNECTION_STRING']
+        client = BlobServiceClient.from_connection_string(conn_str)
+        try:
+            client.create_container("test-container")
+            print("Created: test-container")
+        except Exception as e:
+            if 'ContainerAlreadyExists' in str(e):
+                print("Exists: test-container")
+            else:
+                raise
+        EOF
+      register: blob_result
+
+    - name: Upload test blob
+      ansible.builtin.shell: |
+        python3 << 'EOF'
+        import os
+        from azure.storage.blob import BlobServiceClient
+
+        conn_str = os.environ['AZURE_STORAGE_CONNECTION_STRING']
+        client = BlobServiceClient.from_connection_string(conn_str)
+        container = client.get_container_client("test-container")
+        container.upload_blob("test.txt", b"Hello from Molecule!", overwrite=True)
+        print("Uploaded: test.txt")
+        EOF
+      register: upload_result
+
+    - name: Create queue and send message
+      ansible.builtin.shell: |
+        python3 << 'EOF'
+        import os
+        from azure.storage.queue import QueueServiceClient
+
+        conn_str = os.environ['AZURE_STORAGE_CONNECTION_STRING']
+        client = QueueServiceClient.from_connection_string(conn_str)
+        try:
+            queue = client.create_queue("test-queue")
+        except:
+            queue = client.get_queue_client("test-queue")
+        queue.send_message("Test message")
+        print("Queue created, message sent")
+        EOF
+      register: queue_result
+
+    - name: Create table and insert entity
+      ansible.builtin.shell: |
+        python3 << 'EOF'
+        import os
+        from azure.data.tables import TableServiceClient
+
+        conn_str = os.environ['AZURE_STORAGE_CONNECTION_STRING']
+        client = TableServiceClient.from_connection_string(conn_str)
+        try:
+            table = client.create_table("testtable")
+        except:
+            table = client.get_table_client("testtable")
+        table.upsert_entity({"PartitionKey": "pk1", "RowKey": "rk1", "data": "test"})
+        print("Table created, entity inserted")
+        EOF
+      register: table_result
+
+    - name: Display results
+      ansible.builtin.debug:
+        msg:
+          - "Blob: {{ blob_result.stdout }}"
+          - "Upload: {{ upload_result.stdout }}"
+          - "Queue: {{ queue_result.stdout }}"
+          - "Table: {{ table_result.stdout }}"

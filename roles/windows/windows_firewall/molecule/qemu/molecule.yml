@@ -4,7 +4,7 @@
 # Works on:
 #   - macOS ARM64 (M1-M4) - x86 emulation
 #   - macOS x86_64 (Intel) - native/near-native
-#   - Linux ARM64 - x86 emulation
+#   - Linux ARM64 - x86 emulation  
 #   - Linux x86_64 - KVM acceleration
 #
 # Prerequisites:

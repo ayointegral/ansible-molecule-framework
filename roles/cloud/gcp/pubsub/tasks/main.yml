@@ -1,0 +1,12 @@
+---
+- name: Install Python Pub/Sub library
+  ansible.builtin.pip:
+    name: google-cloud-pubsub
+    state: present
+
+- name: Display Pub/Sub configuration
+  ansible.builtin.debug:
+    msg:
+      - "Project ID: {{ pubsub_project_id }}"
+      - "Emulator Host: {{ pubsub_emulator_host | default('Not set (using real GCP)') }}"
+      - "Topics to create: {{ pubsub_topics | map(attribute='name') | list }}"

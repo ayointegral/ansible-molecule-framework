@@ -1,0 +1,32 @@
+---
+- name: Prepare - Wait for Pub/Sub Emulator
+  hosts: pubsub-test-instance
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - curl
+          - python3-pip
+        state: present
+
+    - name: Install Google Cloud Pub/Sub library
+      ansible.builtin.pip:
+        name: google-cloud-pubsub
+        state: present
+
+    - name: Wait for Pub/Sub emulator
+      ansible.builtin.wait_for:
+        host: pubsub-emulator
+        port: 8085
+        timeout: 60
+
+    - name: Pub/Sub emulator is ready
+      ansible.builtin.debug:
+        msg: "Pub/Sub emulator ready at pubsub-emulator:8085"

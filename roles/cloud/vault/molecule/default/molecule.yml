@@ -1,0 +1,50 @@
+---
+# HashiCorp Vault scenario - Secrets management
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: vault-test-instance
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    pre_build_image: true
+    privileged: true
+    command: /sbin/init
+    tmpfs:
+      - /run
+      - /tmp
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
+    networks:
+      - name: vault-network
+
+  - name: vault
+    image: hashicorp/vault:latest
+    pre_build_image: true
+    command: "server -dev -dev-root-token-id=root -dev-listen-address=0.0.0.0:8200"
+    env:
+      VAULT_DEV_ROOT_TOKEN_ID: "root"
+      VAULT_ADDR: "http://0.0.0.0:8200"
+    exposed_ports:
+      - 8200/tcp
+    networks:
+      - name: vault-network
+
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ALLOW_BROKEN_CONDITIONALS: "true"
+    VAULT_ADDR: "http://vault:8200"
+    VAULT_TOKEN: "root"
+  inventory:
+    hosts:
+      all:
+        hosts:
+          vault-test-instance:
+            ansible_connection: docker
+            vault_addr: "http://vault:8200"
+            vault_token: "root"
+
+verifier:
+  name: ansible

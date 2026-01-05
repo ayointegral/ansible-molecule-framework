@@ -1,0 +1,48 @@
+---
+- name: Prepare - Wait for LocalStack
+  hosts: aws-test-instance
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - curl
+          - python3-pip
+          - unzip
+          - jq
+        state: present
+
+    - name: Install AWS CLI v2
+      ansible.builtin.shell: |
+        curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
+        unzip -q -o /tmp/awscliv2.zip -d /tmp
+        /tmp/aws/install --update
+      args:
+        creates: /usr/local/bin/aws
+
+    - name: Install boto3
+      ansible.builtin.pip:
+        name:
+          - boto3
+          - botocore
+        state: present
+
+    - name: Wait for LocalStack to be ready
+      ansible.builtin.uri:
+        url: "http://localstack:4566/_localstack/health"
+        method: GET
+        status_code: 200
+      register: localstack_health
+      until: localstack_health.status == 200
+      retries: 60
+      delay: 5
+
+    - name: Display LocalStack health
+      ansible.builtin.debug:
+        var: localstack_health.json

@@ -1,0 +1,50 @@
+---
+- name: Install Docker (required for LocalStack)
+  ansible.builtin.include_role:
+    name: containers/docker
+  when: localstack_install_docker | default(true)
+
+- name: Create LocalStack directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ localstack_data_dir }}"
+    - /opt/localstack
+
+- name: Create LocalStack docker-compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: /opt/localstack/docker-compose.yml
+    mode: '0644'
+  notify: Restart localstack
+
+- name: Create LocalStack systemd service
+  ansible.builtin.template:
+    src: localstack.service.j2
+    dest: /etc/systemd/system/localstack.service
+    mode: '0644'
+  notify:
+    - Reload systemd
+    - Restart localstack
+
+- name: Start and enable LocalStack
+  ansible.builtin.service:
+    name: localstack
+    state: started
+    enabled: true
+
+- name: Wait for LocalStack to be ready
+  ansible.builtin.uri:
+    url: "http://localhost:{{ localstack_port }}/_localstack/health"
+    method: GET
+    status_code: 200
+  register: localstack_health
+  until: localstack_health.status == 200
+  retries: 30
+  delay: 5
+
+- name: Display LocalStack status
+  ansible.builtin.debug:
+    msg: "LocalStack is running on port {{ localstack_port }}"

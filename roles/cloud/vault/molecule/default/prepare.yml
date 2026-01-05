@@ -1,0 +1,37 @@
+---
+- name: Prepare - Wait for Vault
+  hosts: vault-test-instance
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - curl
+          - jq
+          - python3-pip
+        state: present
+
+    - name: Install hvac (Vault Python client)
+      ansible.builtin.pip:
+        name: hvac
+        state: present
+
+    - name: Wait for Vault
+      ansible.builtin.uri:
+        url: "http://vault:8200/v1/sys/health"
+        method: GET
+        status_code: [200, 501]  # 501 = not initialized (ok for dev mode check)
+      register: vault_health
+      until: vault_health.status in [200, 501]
+      retries: 30
+      delay: 2
+
+    - name: Vault is ready
+      ansible.builtin.debug:
+        msg: "Vault ready at http://vault:8200 (dev mode, token=root)"

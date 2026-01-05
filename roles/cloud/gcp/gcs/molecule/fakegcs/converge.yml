@@ -1,0 +1,51 @@
+---
+- name: Converge - Test GCS operations
+  hosts: gcs-test-instance
+  become: true
+  gather_facts: true
+  vars:
+    gcs_endpoint: "http://fake-gcs:4443"
+  environment:
+    STORAGE_EMULATOR_HOST: "{{ gcs_endpoint }}"
+
+  tasks:
+    - name: Create buckets and upload files
+      ansible.builtin.shell: |
+        python3 << 'EOF'
+        import os
+        from google.cloud import storage
+        from google.auth.credentials import AnonymousCredentials
+
+        # Connect to fake-gcs-server
+        os.environ['STORAGE_EMULATOR_HOST'] = '{{ gcs_endpoint }}'
+        client = storage.Client(
+            credentials=AnonymousCredentials(),
+            project='test-project'
+        )
+
+        # Create buckets
+        for bucket_name in ['test-bucket', 'logs-bucket', 'data-bucket']:
+            try:
+                bucket = client.create_bucket(bucket_name)
+                print(f"Created: {bucket_name}")
+            except Exception as e:
+                if 'already exists' in str(e).lower():
+                    print(f"Exists: {bucket_name}")
+                else:
+                    raise
+
+        # Upload files
+        bucket = client.bucket('test-bucket')
+        blob = bucket.blob('test.txt')
+        blob.upload_from_string('Hello from GCS!')
+        print("Uploaded: test.txt")
+
+        blob = bucket.blob('config.json')
+        blob.upload_from_string('{"project": "test"}')
+        print("Uploaded: config.json")
+        EOF
+      register: gcs_result
+
+    - name: Display results
+      ansible.builtin.debug:
+        var: gcs_result.stdout_lines

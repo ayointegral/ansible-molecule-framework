@@ -1,0 +1,69 @@
+---
+- name: Converge - Test Consul service discovery
+  hosts: consul-test-instance
+  become: true
+  gather_facts: true
+  vars:
+    consul_addr: "http://consul:8500"
+
+  tasks:
+    - name: Register services
+      ansible.builtin.shell: |
+        # Register web service
+        curl -s -X PUT -d '{
+          "ID": "web-1",
+          "Name": "web",
+          "Tags": ["primary", "v1"],
+          "Address": "10.0.0.1",
+          "Port": 8080,
+          "Check": {
+            "HTTP": "http://10.0.0.1:8080/health",
+            "Interval": "10s"
+          }
+        }' {{ consul_addr }}/v1/agent/service/register
+
+        curl -s -X PUT -d '{
+          "ID": "web-2",
+          "Name": "web",
+          "Tags": ["secondary", "v1"],
+          "Address": "10.0.0.2",
+          "Port": 8080
+        }' {{ consul_addr }}/v1/agent/service/register
+
+        # Register API service
+        curl -s -X PUT -d '{
+          "ID": "api-1",
+          "Name": "api",
+          "Tags": ["v2"],
+          "Address": "10.0.1.1",
+          "Port": 3000
+        }' {{ consul_addr }}/v1/agent/service/register
+
+        # Register database service
+        curl -s -X PUT -d '{
+          "ID": "postgres-1",
+          "Name": "postgres",
+          "Tags": ["primary"],
+          "Address": "10.0.2.1",
+          "Port": 5432
+        }' {{ consul_addr }}/v1/agent/service/register
+
+        echo "Registered 4 services"
+      register: register_services
+
+    - name: Store KV configuration
+      ansible.builtin.shell: |
+        # Store configuration values
+        curl -s -X PUT -d 'production' {{ consul_addr }}/v1/kv/config/environment
+        curl -s -X PUT -d '{"log_level": "info", "debug": false}' {{ consul_addr }}/v1/kv/config/app/settings
+        curl -s -X PUT -d 'postgresql://postgres:5432/myapp' {{ consul_addr }}/v1/kv/config/database/url
+        curl -s -X PUT -d '100' {{ consul_addr }}/v1/kv/config/limits/max_connections
+
+        echo "Stored 4 KV entries"
+      register: store_kv
+
+    - name: Display results
+      ansible.builtin.debug:
+        msg:
+          - "{{ register_services.stdout }}"
+          - "{{ store_kv.stdout }}"

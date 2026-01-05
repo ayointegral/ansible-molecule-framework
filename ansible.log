@@ -1,0 +1,367 @@
+2026-01-02 18:17:00,255 p=67355 u=ayodeleajayi n=ansible INFO| Starting galaxy collection install process
+2026-01-02 18:17:00,394 p=67355 u=ayodeleajayi n=ansible INFO| Process install dependency map
+2026-01-02 18:17:01,311 p=67355 u=ayodeleajayi n=ansible INFO| Starting collection install process
+2026-01-02 18:17:01,318 p=67355 u=ayodeleajayi n=ansible INFO| Downloading https://galaxy.ansible.com/api/v3/plugin/ansible/content/published/collections/artifacts/community-docker-5.0.5.tar.gz to /Users/ayodeleajayi/.ansible/tmp/ansible-local-6735541_87cbw/tmp_9xspibs/community-docker-5.0.5-p6m9k72n
+2026-01-02 18:17:02,971 p=67355 u=ayodeleajayi n=ansible INFO| Installing 'community.docker:5.0.5' to '/Users/ayodeleajayi/.ansible/collections/ansible_collections/community/docker'
+2026-01-02 18:17:03,344 p=67355 u=ayodeleajayi n=ansible INFO| community.docker:5.0.5 was installed successfully
+2026-01-02 18:17:03,344 p=67355 u=ayodeleajayi n=ansible INFO| 'community.library_inventory_filtering_v1:1.1.5' is already installed, skipping.
+2026-01-02 18:17:17,635 p=67498 u=ayodeleajayi n=ansible WARNING| [WARNING]: Collection at '/opt/homebrew/Cellar/ansible/13.1.0/libexec/lib/python3.14/site-packages/ansible/_internal/ansible_collections/ansible/_protomatter' does not have a MANIFEST.json file, nor has it galaxy.yml: cannot detect version.
+
+2026-01-02 18:17:17,641 p=67498 u=ayodeleajayi n=ansible INFO| # /Users/ayodeleajayi/.ansible/collections/ansible_collections
+Collection                               Version
+---------------------------------------- -------
+
+2026-01-02 18:17:17,641 p=67498 u=ayodeleajayi n=ansible INFO| ansible.posix                            2.1.0  
+2026-01-02 18:17:17,641 p=67498 u=ayodeleajayi n=ansible INFO| community.docker                         5.0.5  
+2026-01-02 18:17:17,641 p=67498 u=ayodeleajayi n=ansible INFO| community.general                        12.2.0 
+2026-01-02 18:17:17,641 p=67498 u=ayodeleajayi n=ansible INFO| community.library_inventory_filtering_v1 1.1.5  
+2026-01-02 18:17:17,641 p=67498 u=ayodeleajayi n=ansible INFO| community.postgresql                     4.2.0  
+2026-01-02 18:17:17,641 p=67498 u=ayodeleajayi n=ansible INFO| flowerysong.hvault                       0.2.0  
+2026-01-02 18:17:17,641 p=67498 u=ayodeleajayi n=ansible INFO| # /opt/homebrew/Cellar/ansible/13.1.0/libexec/lib/python3.14/site-packages/ansible/_internal/ansible_collections
+Collection                               Version
+---------------------------------------- -------
+
+2026-01-02 18:17:17,641 p=67498 u=ayodeleajayi n=ansible INFO| ansible._protomatter                     *      
+2026-01-02 18:17:17,641 p=67498 u=ayodeleajayi n=ansible INFO| # /opt/homebrew/Cellar/ansible/13.1.0/libexec/lib/python3.14/site-packages/ansible_collections
+Collection                               Version
+---------------------------------------- -------
+
+2026-01-02 18:17:17,641 p=67498 u=ayodeleajayi n=ansible INFO| amazon.aws                               10.1.2 
+2026-01-02 18:17:17,641 p=67498 u=ayodeleajayi n=ansible INFO| ansible.netcommon                        8.2.0  
+2026-01-02 18:17:17,641 p=67498 u=ayodeleajayi n=ansible INFO| ansible.posix                            2.1.0  
+2026-01-02 18:17:17,641 p=67498 u=ayodeleajayi n=ansible INFO| ansible.utils                            6.0.0  
+2026-01-02 18:17:17,641 p=67498 u=ayodeleajayi n=ansible INFO| ansible.windows                          3.3.0  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| arista.eos                               12.0.0 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| awx.awx                                  24.6.1 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| azure.azcollection                       3.12.0 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| check_point.mgmt                         6.7.0  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| chocolatey.chocolatey                    1.5.3  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| cisco.aci                                2.13.0 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| cisco.dnac                               6.43.0 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| cisco.intersight                         2.12.0 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| cisco.ios                                11.1.1 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| cisco.iosxr                              12.1.0 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| cisco.meraki                             2.21.9 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| cisco.mso                                2.12.0 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| cisco.nxos                               11.1.0 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| cisco.ucs                                1.16.0 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| cloudscale_ch.cloud                      2.5.2  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.aws                            10.0.0 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.ciscosmb                       1.0.11 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.crypto                         3.0.5  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.dns                            3.4.1  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.docker                         5.0.4  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.general                        12.1.0 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.grafana                        2.3.0  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.hashi_vault                    7.1.0  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.hrobot                         2.7.0  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.library_inventory_filtering_v1 1.1.5  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.libvirt                        2.0.0  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.mongodb                        1.7.10 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.mysql                          4.0.1  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.okd                            5.0.0  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.postgresql                     4.2.0  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.proxmox                        1.4.0  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.proxysql                       1.7.0  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.rabbitmq                       1.6.0  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.routeros                       3.14.0 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.sap_libs                       1.5.0  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.sops                           2.2.7  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.vmware                         6.1.0  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.windows                        3.1.0  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| community.zabbix                         4.1.1  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| containers.podman                        1.18.0 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| cyberark.conjur                          1.3.9  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| cyberark.pas                             1.0.36 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| dellemc.enterprise_sonic                 3.2.0  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| dellemc.openmanage                       10.0.1 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| dellemc.powerflex                        3.0.0  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| dellemc.unity                            2.1.0  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| f5networks.f5_modules                    1.39.0 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| fortinet.fortimanager                    2.11.0 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| fortinet.fortios                         2.4.2  
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| google.cloud                             1.10.2 
+2026-01-02 18:17:17,642 p=67498 u=ayodeleajayi n=ansible INFO| grafana.grafana                          6.0.6  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| hetzner.hcloud                           6.2.1  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| hitachivantara.vspone_block              4.5.0  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| hitachivantara.vspone_object             1.1.1  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| ibm.storage_virtualize                   3.1.0  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| ieisystem.inmanage                       4.0.0  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| infinidat.infinibox                      1.6.3  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| infoblox.nios_modules                    1.8.0  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| inspur.ispim                             2.2.4  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| junipernetworks.junos                    11.0.0 
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| kaytus.ksmanage                          2.0.0  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| kubernetes.core                          6.2.0  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| kubevirt.core                            2.2.3  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| lowlydba.sqlserver                       2.7.0  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| microsoft.ad                             1.10.0 
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| microsoft.iis                            1.1.0  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| netapp.cloudmanager                      21.24.0
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| netapp.ontap                             23.2.0 
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| netapp.storagegrid                       21.15.0
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| netapp_eseries.santricity                1.4.1  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| netbox.netbox                            3.21.0 
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| ngine_io.cloudstack                      3.0.0  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| openstack.cloud                          2.5.0  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| ovirt.ovirt                              3.2.1  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| purestorage.flasharray                   1.40.0 
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| purestorage.flashblade                   1.22.0 
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| ravendb.ravendb                          1.0.4  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| splunk.es                                4.0.0  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| telekom_mms.icinga_director              2.5.0  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| theforeman.foreman                       5.7.0  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| vmware.vmware                            2.6.0  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| vmware.vmware_rest                       4.9.0  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| vultr.cloud                              1.13.0 
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| vyos.vyos                                6.0.0  
+2026-01-02 18:17:17,643 p=67498 u=ayodeleajayi n=ansible INFO| wti.remote                               1.0.10 
+2026-01-02 18:17:45,453 p=67737 u=ayodeleajayi n=ansible INFO| Starting galaxy collection install process
+2026-01-02 18:17:45,472 p=67737 u=ayodeleajayi n=ansible INFO| Process install dependency map
+2026-01-02 18:17:46,445 p=67737 u=ayodeleajayi n=ansible INFO| Starting collection install process
+2026-01-02 18:17:46,454 p=67737 u=ayodeleajayi n=ansible INFO| Downloading https://galaxy.ansible.com/api/v3/plugin/ansible/content/published/collections/artifacts/community-docker-5.0.5.tar.gz to /Users/ayodeleajayi/.ansible/tmp/ansible-local-677377_syr5ij/tmp8edn9c2_/community-docker-5.0.5-daxm7qiq
+2026-01-02 18:17:48,151 p=67737 u=ayodeleajayi n=ansible INFO| Installing 'community.docker:5.0.5' to '/Users/ayodeleajayi/.ansible/collections/ansible_collections/community/docker'
+2026-01-02 18:17:48,551 p=67737 u=ayodeleajayi n=ansible INFO| community.docker:5.0.5 was installed successfully
+2026-01-02 18:17:48,551 p=67737 u=ayodeleajayi n=ansible INFO| 'community.library_inventory_filtering_v1:1.1.5' is already installed, skipping.
+2026-01-02 18:18:14,154 p=68193 u=ayodeleajayi n=ansible INFO| # /Users/ayodeleajayi/.ansible/collections/ansible_collections
+Collection       Version
+---------------- -------
+
+2026-01-02 18:18:14,154 p=68193 u=ayodeleajayi n=ansible INFO| community.docker 5.0.5  
+2026-01-05 08:24:47,882 p=83023 u=ayodeleajayi n=ansible INFO| Starting galaxy collection install process
+2026-01-05 08:24:48,021 p=83023 u=ayodeleajayi n=ansible INFO| Process install dependency map
+2026-01-05 08:24:52,793 p=83023 u=ayodeleajayi n=ansible INFO| Starting collection install process
+2026-01-05 08:24:52,795 p=83023 u=ayodeleajayi n=ansible INFO| Downloading https://galaxy.ansible.com/api/v3/plugin/ansible/content/published/collections/artifacts/ansible-windows-3.3.0.tar.gz to /Users/ayodeleajayi/.ansible/tmp/ansible-local-83023ff7tnq91/tmpjdg5xxrx/ansible-windows-3.3.0-a7i7s17a
+2026-01-05 08:24:55,776 p=83023 u=ayodeleajayi n=ansible INFO| Installing 'ansible.windows:3.3.0' to '/Users/ayodeleajayi/.ansible/collections/ansible_collections/ansible/windows'
+2026-01-05 08:24:56,044 p=83023 u=ayodeleajayi n=ansible INFO| ansible.windows:3.3.0 was installed successfully
+2026-01-05 08:24:56,046 p=83023 u=ayodeleajayi n=ansible INFO| Downloading https://galaxy.ansible.com/api/v3/plugin/ansible/content/published/collections/artifacts/community-windows-3.1.0.tar.gz to /Users/ayodeleajayi/.ansible/tmp/ansible-local-83023ff7tnq91/tmpjdg5xxrx/community-windows-3.1.0-5wgikj_c
+2026-01-05 08:24:57,870 p=83023 u=ayodeleajayi n=ansible INFO| Installing 'community.windows:3.1.0' to '/Users/ayodeleajayi/.ansible/collections/ansible_collections/community/windows'
+2026-01-05 08:24:58,073 p=83023 u=ayodeleajayi n=ansible INFO| community.windows:3.1.0 was installed successfully
+2026-01-05 08:30:00,364 p=84642 u=ayodeleajayi n=ansible WARNING| [WARNING]: Collection at '/opt/homebrew/Cellar/ansible/13.1.0/libexec/lib/python3.14/site-packages/ansible/_internal/ansible_collections/ansible/_protomatter' does not have a MANIFEST.json file, nor has it galaxy.yml: cannot detect version.
+
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| # /Users/ayodeleajayi/.ansible/collections/ansible_collections
+Collection                               Version
+---------------------------------------- -------
+
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| ansible.posix                            2.1.0  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| ansible.windows                          3.3.0  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| community.docker                         5.0.5  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| community.general                        12.2.0 
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| community.library_inventory_filtering_v1 1.1.5  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| community.mysql                          4.0.1  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| community.postgresql                     4.2.0  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| community.windows                        3.1.0  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| flowerysong.hvault                       0.2.0  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| # /opt/homebrew/Cellar/ansible/13.1.0/libexec/lib/python3.14/site-packages/ansible/_internal/ansible_collections
+Collection                               Version
+---------------------------------------- -------
+
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| ansible._protomatter                     *      
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| # /opt/homebrew/Cellar/ansible/13.1.0/libexec/lib/python3.14/site-packages/ansible_collections
+Collection                               Version
+---------------------------------------- -------
+
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| amazon.aws                               10.1.2 
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| ansible.netcommon                        8.2.0  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| ansible.posix                            2.1.0  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| ansible.utils                            6.0.0  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| ansible.windows                          3.3.0  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| arista.eos                               12.0.0 
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| awx.awx                                  24.6.1 
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| azure.azcollection                       3.12.0 
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| check_point.mgmt                         6.7.0  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| chocolatey.chocolatey                    1.5.3  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| cisco.aci                                2.13.0 
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| cisco.dnac                               6.43.0 
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| cisco.intersight                         2.12.0 
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| cisco.ios                                11.1.1 
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| cisco.iosxr                              12.1.0 
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| cisco.meraki                             2.21.9 
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| cisco.mso                                2.12.0 
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| cisco.nxos                               11.1.0 
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| cisco.ucs                                1.16.0 
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| cloudscale_ch.cloud                      2.5.2  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| community.aws                            10.0.0 
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| community.ciscosmb                       1.0.11 
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| community.crypto                         3.0.5  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| community.dns                            3.4.1  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| community.docker                         5.0.4  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| community.general                        12.1.0 
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| community.grafana                        2.3.0  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| community.hashi_vault                    7.1.0  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| community.hrobot                         2.7.0  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| community.library_inventory_filtering_v1 1.1.5  
+2026-01-05 08:30:00,379 p=84642 u=ayodeleajayi n=ansible INFO| community.libvirt                        2.0.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| community.mongodb                        1.7.10 
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| community.mysql                          4.0.1  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| community.okd                            5.0.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| community.postgresql                     4.2.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| community.proxmox                        1.4.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| community.proxysql                       1.7.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| community.rabbitmq                       1.6.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| community.routeros                       3.14.0 
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| community.sap_libs                       1.5.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| community.sops                           2.2.7  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| community.vmware                         6.1.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| community.windows                        3.1.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| community.zabbix                         4.1.1  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| containers.podman                        1.18.0 
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| cyberark.conjur                          1.3.9  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| cyberark.pas                             1.0.36 
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| dellemc.enterprise_sonic                 3.2.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| dellemc.openmanage                       10.0.1 
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| dellemc.powerflex                        3.0.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| dellemc.unity                            2.1.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| f5networks.f5_modules                    1.39.0 
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| fortinet.fortimanager                    2.11.0 
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| fortinet.fortios                         2.4.2  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| google.cloud                             1.10.2 
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| grafana.grafana                          6.0.6  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| hetzner.hcloud                           6.2.1  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| hitachivantara.vspone_block              4.5.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| hitachivantara.vspone_object             1.1.1  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| ibm.storage_virtualize                   3.1.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| ieisystem.inmanage                       4.0.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| infinidat.infinibox                      1.6.3  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| infoblox.nios_modules                    1.8.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| inspur.ispim                             2.2.4  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| junipernetworks.junos                    11.0.0 
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| kaytus.ksmanage                          2.0.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| kubernetes.core                          6.2.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| kubevirt.core                            2.2.3  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| lowlydba.sqlserver                       2.7.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| microsoft.ad                             1.10.0 
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| microsoft.iis                            1.1.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| netapp.cloudmanager                      21.24.0
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| netapp.ontap                             23.2.0 
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| netapp.storagegrid                       21.15.0
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| netapp_eseries.santricity                1.4.1  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| netbox.netbox                            3.21.0 
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| ngine_io.cloudstack                      3.0.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| openstack.cloud                          2.5.0  
+2026-01-05 08:30:00,380 p=84642 u=ayodeleajayi n=ansible INFO| ovirt.ovirt                              3.2.1  
+2026-01-05 08:30:00,381 p=84642 u=ayodeleajayi n=ansible INFO| purestorage.flasharray                   1.40.0 
+2026-01-05 08:30:00,381 p=84642 u=ayodeleajayi n=ansible INFO| purestorage.flashblade                   1.22.0 
+2026-01-05 08:30:00,381 p=84642 u=ayodeleajayi n=ansible INFO| ravendb.ravendb                          1.0.4  
+2026-01-05 08:30:00,381 p=84642 u=ayodeleajayi n=ansible INFO| splunk.es                                4.0.0  
+2026-01-05 08:30:00,381 p=84642 u=ayodeleajayi n=ansible INFO| telekom_mms.icinga_director              2.5.0  
+2026-01-05 08:30:00,381 p=84642 u=ayodeleajayi n=ansible INFO| theforeman.foreman                       5.7.0  
+2026-01-05 08:30:00,381 p=84642 u=ayodeleajayi n=ansible INFO| vmware.vmware                            2.6.0  
+2026-01-05 08:30:00,381 p=84642 u=ayodeleajayi n=ansible INFO| vmware.vmware_rest                       4.9.0  
+2026-01-05 08:30:00,381 p=84642 u=ayodeleajayi n=ansible INFO| vultr.cloud                              1.13.0 
+2026-01-05 08:30:00,381 p=84642 u=ayodeleajayi n=ansible INFO| vyos.vyos                                6.0.0  
+2026-01-05 08:30:00,381 p=84642 u=ayodeleajayi n=ansible INFO| wti.remote                               1.0.10 
+2026-01-05 08:30:00,767 p=84648 u=ayodeleajayi n=ansible WARNING| [WARNING]: Collection at '/opt/homebrew/Cellar/ansible/13.1.0/libexec/lib/python3.14/site-packages/ansible/_internal/ansible_collections/ansible/_protomatter' does not have a MANIFEST.json file, nor has it galaxy.yml: cannot detect version.
+
+2026-01-05 08:30:00,770 p=84648 u=ayodeleajayi n=ansible INFO| # /Users/ayodeleajayi/.ansible/collections/ansible_collections
+Collection                               Version
+---------------------------------------- -------
+
+2026-01-05 08:30:00,770 p=84648 u=ayodeleajayi n=ansible INFO| ansible.posix                            2.1.0  
+2026-01-05 08:30:00,770 p=84648 u=ayodeleajayi n=ansible INFO| ansible.windows                          3.3.0  
+2026-01-05 08:30:00,770 p=84648 u=ayodeleajayi n=ansible INFO| community.docker                         5.0.5  
+2026-01-05 08:30:00,770 p=84648 u=ayodeleajayi n=ansible INFO| community.general                        12.2.0 
+2026-01-05 08:30:00,770 p=84648 u=ayodeleajayi n=ansible INFO| community.library_inventory_filtering_v1 1.1.5  
+2026-01-05 08:30:00,770 p=84648 u=ayodeleajayi n=ansible INFO| community.mysql                          4.0.1  
+2026-01-05 08:30:00,770 p=84648 u=ayodeleajayi n=ansible INFO| community.postgresql                     4.2.0  
+2026-01-05 08:30:00,770 p=84648 u=ayodeleajayi n=ansible INFO| community.windows                        3.1.0  
+2026-01-05 08:30:00,770 p=84648 u=ayodeleajayi n=ansible INFO| flowerysong.hvault                       0.2.0  
+2026-01-05 08:30:00,770 p=84648 u=ayodeleajayi n=ansible INFO| # /opt/homebrew/Cellar/ansible/13.1.0/libexec/lib/python3.14/site-packages/ansible/_internal/ansible_collections
+Collection                               Version
+---------------------------------------- -------
+
+2026-01-05 08:30:00,770 p=84648 u=ayodeleajayi n=ansible INFO| ansible._protomatter                     *      
+2026-01-05 08:30:00,770 p=84648 u=ayodeleajayi n=ansible INFO| # /opt/homebrew/Cellar/ansible/13.1.0/libexec/lib/python3.14/site-packages/ansible_collections
+Collection                               Version
+---------------------------------------- -------
+
+2026-01-05 08:30:00,770 p=84648 u=ayodeleajayi n=ansible INFO| amazon.aws                               10.1.2 
+2026-01-05 08:30:00,770 p=84648 u=ayodeleajayi n=ansible INFO| ansible.netcommon                        8.2.0  
+2026-01-05 08:30:00,770 p=84648 u=ayodeleajayi n=ansible INFO| ansible.posix                            2.1.0  
+2026-01-05 08:30:00,770 p=84648 u=ayodeleajayi n=ansible INFO| ansible.utils                            6.0.0  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| ansible.windows                          3.3.0  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| arista.eos                               12.0.0 
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| awx.awx                                  24.6.1 
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| azure.azcollection                       3.12.0 
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| check_point.mgmt                         6.7.0  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| chocolatey.chocolatey                    1.5.3  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| cisco.aci                                2.13.0 
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| cisco.dnac                               6.43.0 
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| cisco.intersight                         2.12.0 
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| cisco.ios                                11.1.1 
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| cisco.iosxr                              12.1.0 
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| cisco.meraki                             2.21.9 
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| cisco.mso                                2.12.0 
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| cisco.nxos                               11.1.0 
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| cisco.ucs                                1.16.0 
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| cloudscale_ch.cloud                      2.5.2  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.aws                            10.0.0 
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.ciscosmb                       1.0.11 
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.crypto                         3.0.5  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.dns                            3.4.1  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.docker                         5.0.4  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.general                        12.1.0 
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.grafana                        2.3.0  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.hashi_vault                    7.1.0  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.hrobot                         2.7.0  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.library_inventory_filtering_v1 1.1.5  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.libvirt                        2.0.0  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.mongodb                        1.7.10 
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.mysql                          4.0.1  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.okd                            5.0.0  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.postgresql                     4.2.0  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.proxmox                        1.4.0  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.proxysql                       1.7.0  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.rabbitmq                       1.6.0  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.routeros                       3.14.0 
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.sap_libs                       1.5.0  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.sops                           2.2.7  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.vmware                         6.1.0  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.windows                        3.1.0  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| community.zabbix                         4.1.1  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| containers.podman                        1.18.0 
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| cyberark.conjur                          1.3.9  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| cyberark.pas                             1.0.36 
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| dellemc.enterprise_sonic                 3.2.0  
+2026-01-05 08:30:00,771 p=84648 u=ayodeleajayi n=ansible INFO| dellemc.openmanage                       10.0.1 
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| dellemc.powerflex                        3.0.0  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| dellemc.unity                            2.1.0  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| f5networks.f5_modules                    1.39.0 
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| fortinet.fortimanager                    2.11.0 
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| fortinet.fortios                         2.4.2  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| google.cloud                             1.10.2 
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| grafana.grafana                          6.0.6  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| hetzner.hcloud                           6.2.1  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| hitachivantara.vspone_block              4.5.0  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| hitachivantara.vspone_object             1.1.1  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| ibm.storage_virtualize                   3.1.0  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| ieisystem.inmanage                       4.0.0  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| infinidat.infinibox                      1.6.3  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| infoblox.nios_modules                    1.8.0  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| inspur.ispim                             2.2.4  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| junipernetworks.junos                    11.0.0 
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| kaytus.ksmanage                          2.0.0  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| kubernetes.core                          6.2.0  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| kubevirt.core                            2.2.3  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| lowlydba.sqlserver                       2.7.0  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| microsoft.ad                             1.10.0 
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| microsoft.iis                            1.1.0  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| netapp.cloudmanager                      21.24.0
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| netapp.ontap                             23.2.0 
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| netapp.storagegrid                       21.15.0
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| netapp_eseries.santricity                1.4.1  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| netbox.netbox                            3.21.0 
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| ngine_io.cloudstack                      3.0.0  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| openstack.cloud                          2.5.0  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| ovirt.ovirt                              3.2.1  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| purestorage.flasharray                   1.40.0 
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| purestorage.flashblade                   1.22.0 
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| ravendb.ravendb                          1.0.4  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| splunk.es                                4.0.0  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| telekom_mms.icinga_director              2.5.0  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| theforeman.foreman                       5.7.0  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| vmware.vmware                            2.6.0  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| vmware.vmware_rest                       4.9.0  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| vultr.cloud                              1.13.0 
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| vyos.vyos                                6.0.0  
+2026-01-05 08:30:00,772 p=84648 u=ayodeleajayi n=ansible INFO| wti.remote                               1.0.10 

@@ -1,0 +1,27 @@
+---
+vault_version: "1.15.4"
+vault_addr: "http://127.0.0.1:8200"
+vault_cluster_addr: "https://127.0.0.1:8201"
+
+vault_user: vault
+vault_group: vault
+
+vault_config_dir: /etc/vault.d
+vault_data_dir: /opt/vault/data
+vault_log_dir: /var/log/vault
+
+# Dev mode (for testing only)
+vault_dev_mode: false
+vault_dev_root_token: "root"
+
+# TLS settings
+vault_tls_disable: true
+vault_tls_cert_file: ""
+vault_tls_key_file: ""
+
+# Storage backend
+vault_storage_backend: file
+vault_storage_path: "{{ vault_data_dir }}"
+
+# Listener
+vault_listener_address: "0.0.0.0:8200"

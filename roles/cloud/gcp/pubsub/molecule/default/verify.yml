@@ -1,0 +1,47 @@
+---
+- name: Verify - Pub/Sub operations
+  hosts: pubsub-test-instance
+  become: true
+  gather_facts: false
+  environment:
+    PUBSUB_EMULATOR_HOST: "pubsub-emulator:8085"
+
+  tasks:
+    - name: Verify topics and pull messages
+      ansible.builtin.shell: |
+        python3 << 'EOF'
+        import os
+        from google.cloud import pubsub_v1
+
+        os.environ['PUBSUB_EMULATOR_HOST'] = 'pubsub-emulator:8085'
+
+        project_id = 'test-project'
+        publisher = pubsub_v1.PublisherClient()
+        subscriber = pubsub_v1.SubscriberClient()
+
+        # List topics
+        project_path = f"projects/{project_id}"
+        topics = list(publisher.list_topics(request={"project": project_path}))
+        print(f"PASS: Found {len(topics)} topics")
+
+        # List subscriptions
+        subs = list(subscriber.list_subscriptions(request={"project": project_path}))
+        print(f"PASS: Found {len(subs)} subscriptions")
+
+        # Pull messages from events subscription
+        sub_path = subscriber.subscription_path(project_id, 'events-sub')
+        response = subscriber.pull(request={"subscription": sub_path, "max_messages": 10})
+        messages = response.received_messages
+        print(f"PASS: Pulled {len(messages)} messages from events-sub")
+
+        # Acknowledge messages
+        if messages:
+            ack_ids = [msg.ack_id for msg in messages]
+            subscriber.acknowledge(request={"subscription": sub_path, "ack_ids": ack_ids})
+            print(f"PASS: Acknowledged {len(ack_ids)} messages")
+        EOF
+      register: verify_result
+
+    - name: Display verification
+      ansible.builtin.debug:
+        var: verify_result.stdout_lines

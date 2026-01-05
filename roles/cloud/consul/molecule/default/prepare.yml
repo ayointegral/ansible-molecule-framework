@@ -1,0 +1,38 @@
+---
+- name: Prepare - Wait for Consul
+  hosts: consul-test-instance
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - curl
+          - jq
+          - python3-pip
+          - dnsutils
+        state: present
+
+    - name: Install python-consul
+      ansible.builtin.pip:
+        name: python-consul
+        state: present
+
+    - name: Wait for Consul
+      ansible.builtin.uri:
+        url: "http://consul:8500/v1/status/leader"
+        method: GET
+        status_code: 200
+      register: consul_health
+      until: consul_health.status == 200
+      retries: 30
+      delay: 2
+
+    - name: Consul is ready
+      ansible.builtin.debug:
+        msg: "Consul ready at http://consul:8500"

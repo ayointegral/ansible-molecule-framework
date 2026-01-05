@@ -1,0 +1,87 @@
+---
+- name: Converge - Test Pub/Sub operations
+  hosts: pubsub-test-instance
+  become: true
+  gather_facts: true
+  environment:
+    PUBSUB_EMULATOR_HOST: "pubsub-emulator:8085"
+
+  tasks:
+    - name: Create topics and subscriptions
+      ansible.builtin.shell: |
+        python3 << 'EOF'
+        import os
+        from google.cloud import pubsub_v1
+
+        os.environ['PUBSUB_EMULATOR_HOST'] = 'pubsub-emulator:8085'
+
+        project_id = 'test-project'
+        publisher = pubsub_v1.PublisherClient()
+        subscriber = pubsub_v1.SubscriberClient()
+
+        # Create topics
+        topics = ['events', 'notifications', 'logs']
+        for topic_name in topics:
+            topic_path = publisher.topic_path(project_id, topic_name)
+            try:
+                publisher.create_topic(request={"name": topic_path})
+                print(f"Created topic: {topic_name}")
+            except Exception as e:
+                if 'AlreadyExists' in str(e):
+                    print(f"Topic exists: {topic_name}")
+                else:
+                    raise
+
+        # Create subscriptions
+        subscriptions = [
+            ('events-sub', 'events'),
+            ('notifications-sub', 'notifications'),
+            ('logs-sub', 'logs'),
+        ]
+        for sub_name, topic_name in subscriptions:
+            topic_path = publisher.topic_path(project_id, topic_name)
+            sub_path = subscriber.subscription_path(project_id, sub_name)
+            try:
+                subscriber.create_subscription(request={"name": sub_path, "topic": topic_path})
+                print(f"Created subscription: {sub_name} -> {topic_name}")
+            except Exception as e:
+                if 'AlreadyExists' in str(e):
+                    print(f"Subscription exists: {sub_name}")
+                else:
+                    raise
+        EOF
+      register: create_result
+
+    - name: Publish messages
+      ansible.builtin.shell: |
+        python3 << 'EOF'
+        import os
+        import json
+        from google.cloud import pubsub_v1
+
+        os.environ['PUBSUB_EMULATOR_HOST'] = 'pubsub-emulator:8085'
+
+        project_id = 'test-project'
+        publisher = pubsub_v1.PublisherClient()
+
+        # Publish to events topic
+        topic_path = publisher.topic_path(project_id, 'events')
+        for i in range(3):
+            data = json.dumps({"event_id": i, "type": "test"}).encode()
+            future = publisher.publish(topic_path, data, source="molecule-test")
+            future.result()
+        print("Published 3 messages to events topic")
+
+        # Publish to notifications topic
+        topic_path = publisher.topic_path(project_id, 'notifications')
+        data = json.dumps({"notification": "Hello from Molecule!"}).encode()
+        publisher.publish(topic_path, data).result()
+        print("Published 1 message to notifications topic")
+        EOF
+      register: publish_result
+
+    - name: Display results
+      ansible.builtin.debug:
+        msg:
+          - "{{ create_result.stdout_lines }}"
+          - "{{ publish_result.stdout_lines }}"

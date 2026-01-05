@@ -1,0 +1,63 @@
+---
+- name: Verify - Azure Storage operations
+  hosts: azure-test-instance
+  become: true
+  gather_facts: false
+  vars:
+    azure_connection_string: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1"
+  environment:
+    AZURE_STORAGE_CONNECTION_STRING: "{{ azure_connection_string }}"
+
+  tasks:
+    - name: Verify blob download
+      ansible.builtin.shell: |
+        python3 << 'EOF'
+        import os
+        from azure.storage.blob import BlobServiceClient
+
+        conn_str = os.environ['AZURE_STORAGE_CONNECTION_STRING']
+        client = BlobServiceClient.from_connection_string(conn_str)
+        blob = client.get_container_client("test-container").download_blob("test.txt")
+        content = blob.readall().decode()
+        assert content == "Hello from Molecule!", f"Content mismatch: {content}"
+        print("PASS: Blob verified")
+        EOF
+      register: verify_blob
+
+    - name: Verify queue message
+      ansible.builtin.shell: |
+        python3 << 'EOF'
+        import os
+        from azure.storage.queue import QueueServiceClient
+
+        conn_str = os.environ['AZURE_STORAGE_CONNECTION_STRING']
+        client = QueueServiceClient.from_connection_string(conn_str)
+        queue = client.get_queue_client("test-queue")
+        messages = list(queue.peek_messages())
+        assert len(messages) > 0, "No messages in queue"
+        print(f"PASS: Queue has {len(messages)} message(s)")
+        EOF
+      register: verify_queue
+
+    - name: Verify table entity
+      ansible.builtin.shell: |
+        python3 << 'EOF'
+        import os
+        from azure.data.tables import TableServiceClient
+
+        conn_str = os.environ['AZURE_STORAGE_CONNECTION_STRING']
+        client = TableServiceClient.from_connection_string(conn_str)
+        table = client.get_table_client("testtable")
+        entity = table.get_entity("pk1", "rk1")
+        assert entity["data"] == "test", f"Data mismatch: {entity}"
+        print("PASS: Table entity verified")
+        EOF
+      register: verify_table
+
+    - name: Verification summary
+      ansible.builtin.debug:
+        msg:
+          - "{{ verify_blob.stdout }}"
+          - "{{ verify_queue.stdout }}"
+          - "{{ verify_table.stdout }}"
+          - "All Azure Storage operations verified!"

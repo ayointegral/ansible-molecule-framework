@@ -1,0 +1,46 @@
+---
+- name: Verify - GCS operations
+  hosts: gcs-test-instance
+  become: true
+  gather_facts: false
+  vars:
+    gcs_endpoint: "http://fake-gcs:4443"
+  environment:
+    STORAGE_EMULATOR_HOST: "{{ gcs_endpoint }}"
+
+  tasks:
+    - name: Verify buckets and files
+      ansible.builtin.shell: |
+        python3 << 'EOF'
+        import os
+        from google.cloud import storage
+        from google.auth.credentials import AnonymousCredentials
+
+        os.environ['STORAGE_EMULATOR_HOST'] = '{{ gcs_endpoint }}'
+        client = storage.Client(
+            credentials=AnonymousCredentials(),
+            project='test-project'
+        )
+
+        # Verify buckets
+        buckets = list(client.list_buckets())
+        bucket_names = [b.name for b in buckets]
+        assert 'test-bucket' in bucket_names, "test-bucket not found"
+        print(f"PASS: Found {len(buckets)} buckets")
+
+        # Verify file content
+        bucket = client.bucket('test-bucket')
+        blob = bucket.blob('test.txt')
+        content = blob.download_as_text()
+        assert content == 'Hello from GCS!', f"Content mismatch: {content}"
+        print("PASS: File content verified")
+
+        # List blobs
+        blobs = list(bucket.list_blobs())
+        print(f"PASS: Found {len(blobs)} blobs in test-bucket")
+        EOF
+      register: verify_result
+
+    - name: Display verification
+      ansible.builtin.debug:
+        var: verify_result.stdout_lines

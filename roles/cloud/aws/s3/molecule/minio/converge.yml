@@ -1,0 +1,58 @@
+---
+- name: Converge - Test S3 operations with MinIO
+  hosts: s3-test-instance
+  become: true
+  gather_facts: true
+  vars:
+    minio_endpoint: "http://minio:9000"
+  environment:
+    AWS_ACCESS_KEY_ID: "minioadmin"
+    AWS_SECRET_ACCESS_KEY: "minioadmin"
+
+  tasks:
+    - name: Create S3 buckets using boto3
+      ansible.builtin.shell: |
+        python3 << 'EOF'
+        import boto3
+        from botocore.client import Config
+
+        s3 = boto3.client('s3',
+            endpoint_url='{{ minio_endpoint }}',
+            aws_access_key_id='minioadmin',
+            aws_secret_access_key='minioadmin',
+            config=Config(signature_version='s3v4'))
+
+        for bucket in ['test-bucket', 'logs-bucket', 'backups-bucket']:
+            try:
+                s3.create_bucket(Bucket=bucket)
+                print(f"Created: {bucket}")
+            except s3.exceptions.BucketAlreadyOwnedByYou:
+                print(f"Exists: {bucket}")
+        EOF
+      register: create_buckets
+
+    - name: Upload files to S3
+      ansible.builtin.shell: |
+        python3 << 'EOF'
+        import boto3
+        from botocore.client import Config
+
+        s3 = boto3.client('s3',
+            endpoint_url='{{ minio_endpoint }}',
+            aws_access_key_id='minioadmin',
+            aws_secret_access_key='minioadmin',
+            config=Config(signature_version='s3v4'))
+
+        # Upload test files
+        s3.put_object(Bucket='test-bucket', Key='test.txt', Body=b'Hello MinIO!')
+        s3.put_object(Bucket='test-bucket', Key='config.json', Body=b'{"env": "test"}')
+        s3.put_object(Bucket='logs-bucket', Key='app.log', Body=b'Log entry 1\nLog entry 2')
+        print("Uploaded 3 files")
+        EOF
+      register: upload_files
+
+    - name: Display results
+      ansible.builtin.debug:
+        msg:
+          - "{{ create_buckets.stdout }}"
+          - "{{ upload_files.stdout }}"
